@@ -23,6 +23,7 @@
     <button class="main-tab active" onclick="openMainTab(event,'cadastro')"><i class="fas fa-user-plus"></i> Cadastro</button>
     <button class="main-tab" onclick="openMainTab(event,'competencias')"><i class="fas fa-list-check"></i> Competências</button>
     <button class="main-tab" onclick="openMainTab(event,'avaliacao')"><i class="fas fa-star"></i> Avaliação</button>
+    <button class="main-tab" onclick="openMainTab(event,'plano_acao')"><i class="fas fa-tasks"></i> Plano de Ação</button>
     <button class="main-tab" onclick="openMainTab(event,'desenvolvimento')"><i class="fas fa-bullseye"></i> PDI & Radar</button>
     <button class="main-tab" onclick="openMainTab(event,'matriz')"><i class="fas fa-th"></i> Matriz</button>
 </nav>
@@ -83,7 +84,7 @@
                 <div class="card">
                     <h2>Competência</h2>
                     <input id="skillName" placeholder="Título">
-                    <textarea id="skillDescription" placeholder="Descrição..."></textarea>
+                    <textarea id="skillDescription" placeholder="Descrição da Competência..."></textarea>
                     <select id="skillType">
                         <option value="Hard Skill">Hard Skill</option>
                         <option value="Soft Skill">Soft Skill</option>
@@ -99,21 +100,36 @@
             </div>
         </div>
         <div id="comp-plano" class="sub-content">
-            <div class="card">
-                <h2>Ações de Desenvolvimento por Nível</h2>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Competência</th>
-                                <th>Ações Nível 3</th>
-                                <th>Ações Nível 6</th>
-                                <th>Ações Nível 9</th>
-                                <th>Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="skillPlansTableBody"></tbody>
-                    </table>
+            <div class="grid-layout">
+                <div class="card">
+                    <h2>Vincular Ações</h2>
+                    <select id="skillPlanSelect" onchange="loadSkillPlanForm()">
+                        <option value="">Selecione uma Competência</option>
+                    </select>
+                    <div id="skillPlanForm" style="display:none; margin-top:15px;">
+                        <label>Ações Nível 3</label>
+                        <textarea id="planN3" placeholder="Ações para nível inicial..."></textarea>
+                        <label>Ações Nível 6</label>
+                        <textarea id="planN6" placeholder="Ações para nível intermediário..."></textarea>
+                        <label>Ações Nível 9</label>
+                        <textarea id="planN9" placeholder="Ações para nível avançado..."></textarea>
+                        <button class="btn-primary" onclick="saveSkillPlan()">Salvar Regras</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Competência</th>
+                                    <th>N3</th>
+                                    <th>N6</th>
+                                    <th>N9</th>
+                                </tr>
+                            </thead>
+                            <tbody id="skillPlansTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -126,12 +142,22 @@
         </div>
         <div id="aval-pessoa" class="sub-content active">
             <div class="card">
-                <h2>Lançar Notas (3, 6 ou 9)</h2>
+                <h2>Lançar Notas</h2>
                 <select id="evalPersonSelect" onchange="renderIndividualEvalTable()"></select>
-                <table>
-                    <thead><tr><th>Competência</th><th>Atual (3/6/9)</th><th>Alvo (3/6/9)</th></tr></thead>
-                    <tbody id="individualEvalBody"></tbody>
-                </table>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Competência</th>
+                                <th>Atual</th>
+                                <th>Descrição (Atual)</th>
+                                <th>Alvo</th>
+                                <th>Descrição (Alvo)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="individualEvalBody"></tbody>
+                    </table>
+                </div>
                 <button class="btn-primary" onclick="saveIndividualEvaluations()" style="margin-top:20px;">Atualizar Notas</button>
             </div>
         </div>
@@ -144,6 +170,30 @@
                     <tbody id="groupEvalBody"></tbody>
                 </table>
                 <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Atualizar Targets</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="plano_acao" class="main-content">
+        <div class="card">
+            <h2>Plano de Ação Personalizado</h2>
+            <div style="margin-bottom: 15px;">
+                <label>Filtrar por Pessoa:</label>
+                <select id="filterActionPlanPerson" onchange="renderActionPlanTable()"></select>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Pessoa</th>
+                            <th>Competência a Desenvolver</th>
+                            <th>Ações de Desenvolvimento (Editável)</th>
+                            <th>Prioridade</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="actionPlanTableBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
