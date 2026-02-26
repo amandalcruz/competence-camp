@@ -1,3 +1,17 @@
+// CONFIGURAÇÃO DO SEU PROJETO (COLE AS SUAS CHAVES AQUI)
+const firebaseConfig = {
+    apiKey: "AIzaSyBrvXWUSsA9H8vKm6-FGwUihB1WhAofpx0",
+    authDomain: "competence-camp.firebaseapp.com",
+    databaseURL: "https://competence-camp-default-rtdb.firebaseio.com",
+    projectId: "competence-camp",
+    storageBucket: "competence-camp.firebasestorage.app",
+    messagingSenderId: "396090192687",
+    appId: "1:396090192687:web:b549b72dab7b40adede7da"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 let people = [];
 let skills = [];
 let groups = [];
@@ -7,64 +21,29 @@ let groupTargets = {};
 let selectedPeopleForGroup = [];
 let currentChart = null;
 
-// --- SALVAMENTO LOCAL AUTOMÁTICO ---
+// --- SINCRONIZAÇÃO EM TEMPO REAL ---
 window.onload = () => {
-    loadLocal();
-    updateAllSelects();
+    db.ref('pdi_data').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            people = data.people || [];
+            skills = data.skills || [];
+            groups = data.groups || [];
+            skillPlans = data.skillPlans || [];
+            evaluations = data.evaluations || {};
+            groupTargets = data.groupTargets || {};
+            
+            renderPeople();
+            renderSkills();
+            renderGroups();
+            updateAllSelects();
+        }
+    });
 };
 
-function saveLocal() {
+function syncToFirebase() {
     const data = { people, skills, groups, skillPlans, evaluations, groupTargets };
-    localStorage.setItem('competence_camp_data', JSON.stringify(data));
-}
-
-function loadLocal() {
-    const data = localStorage.getItem('competence_camp_data');
-    if (data) {
-        const p = JSON.parse(data);
-        people = p.people || [];
-        skills = p.skills || [];
-        groups = p.groups || [];
-        skillPlans = p.skillPlans || [];
-        evaluations = p.evaluations || {};
-        groupTargets = p.groupTargets || {};
-        renderPeople();
-        renderSkills();
-        renderGroups();
-    }
-}
-
-// --- IMPORTAR / EXPORTAR ARQUIVO ---
-function exportData() {
-    const data = { people, skills, groups, skillPlans, evaluations, groupTargets };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `backup_pdi_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
-    a.click();
-}
-
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const p = JSON.parse(e.target.result);
-            people = p.people || [];
-            skills = p.skills || [];
-            groups = p.groups || [];
-            skillPlans = p.skillPlans || [];
-            evaluations = p.evaluations || {};
-            groupTargets = p.groupTargets || {};
-            saveLocal();
-            location.reload();
-        } catch (err) {
-            alert("Erro ao ler o arquivo de backup.");
-        }
-    };
-    reader.readAsText(file);
+    db.ref('pdi_data').set(data);
 }
 
 // --- NAVEGAÇÃO ---
@@ -88,36 +67,42 @@ function openSubTab(evt, subName) {
     if (subName === 'comp-plano') renderSkillPlansTable();
 }
 
-// --- CADASTROS ---
+// --- FUNÇÕES DE CADASTRO ---
 function addPerson() {
     const name = document.getElementById('personName').value;
     if(!name) return;
     people.push({ id: Date.now(), name, role: document.getElementById('personRole').value, manager: document.getElementById('personManager').value });
     document.getElementById('personName').value = "";
-    saveLocal(); renderPeople(); updateAllSelects();
+    syncToFirebase();
 }
 
 function renderPeople() {
-    document.getElementById('peopleList').innerHTML = people.map(p => `<tr><td>${p.name}</td><td>${p.role}</td><td>${p.manager}</td><td><button class="btn-delete" onclick="deletePerson(${p.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+    document.getElementById('peopleList').innerHTML = people.map(p => `<tr><td>${p.name}</td><td>${p.role}</td><td><button class="btn-delete" onclick="deletePerson(${p.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
 }
 
-function deletePerson(id) { people = people.filter(p => p.id !== id); saveLocal(); renderPeople(); updateAllSelects(); }
+function deletePerson(id) {
+    people = people.filter(p => p.id !== id);
+    syncToFirebase();
+}
 
 function addSkill() {
     const name = document.getElementById('skillName').value;
     if(!name) return;
     skills.push({ id: Date.now(), name, type: document.getElementById('skillType').value });
     document.getElementById('skillName').value = "";
-    saveLocal(); renderSkills(); updateAllSelects();
+    syncToFirebase();
 }
 
 function renderSkills() {
     document.getElementById('skillsList').innerHTML = skills.map(s => `<tr><td>${s.name}</td><td>${s.type}</td><td><button class="btn-delete" onclick="deleteSkill(${s.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
 }
 
-function deleteSkill(id) { skills = skills.filter(s => s.id !== id); saveLocal(); renderSkills(); updateAllSelects(); }
+function deleteSkill(id) {
+    skills = skills.filter(s => s.id !== id);
+    syncToFirebase();
+}
 
-// --- REGRAS ---
+// --- REGRAS PDI ---
 function saveSkillPlan() {
     const skillName = document.getElementById('skillPlanSelect').value;
     const from = document.getElementById('planFrom').value;
@@ -125,14 +110,12 @@ function saveSkillPlan() {
     const action = document.getElementById('planAction').value;
     if(!skillName || from==="" || to==="" || !action) return;
     skillPlans.push({ id: Date.now(), skillName, from: parseInt(from), to: parseInt(to), action });
-    saveLocal(); renderSkillPlansTable();
+    syncToFirebase();
 }
 
 function renderSkillPlansTable() {
-    document.getElementById('skillPlansList').innerHTML = skillPlans.map(p => `<tr><td>${p.skillName}</td><td>${p.from}➔${p.to}</td><td>${p.action}</td><td><button class="btn-delete" onclick="deletePlan(${p.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+    document.getElementById('skillPlansList').innerHTML = skillPlans.map(p => `<tr><td>${p.skillName}</td><td>${p.from}➔${p.to}</td><td>${p.action}</td></tr>`).join('');
 }
-
-function deletePlan(id) { skillPlans = skillPlans.filter(x => x.id !== id); saveLocal(); renderSkillPlansTable(); }
 
 // --- GRUPOS ---
 function handleSelectPerson(el) { if(!el.value) return; selectedPeopleForGroup.push(el.value); renderTags(); renderGroupDropdown(); el.value=""; }
@@ -144,10 +127,10 @@ function saveGroup() {
     if(!name || selectedPeopleForGroup.length==0) return;
     groups.push({ id: Date.now(), name, members: [...selectedPeopleForGroup] });
     selectedPeopleForGroup = []; document.getElementById('groupName').value = "";
-    saveLocal(); renderGroups(); renderTags(); 
+    syncToFirebase();
 }
-function renderGroups() { document.getElementById('groupTable').innerHTML = groups.map(g => `<tr><td>${g.name}</td><td>${g.members.join(', ')}</td><td><button class="btn-delete" onclick="deleteGroup(${g.id})"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
-function deleteGroup(id) { groups = groups.filter(x => x.id !== id); saveLocal(); renderGroups(); }
+function renderGroups() { document.getElementById('groupTable').innerHTML = groups.map(g => `<tr><td>${g.name}</td><td>${g.members.length} membros</td><td><button class="btn-delete" onclick="deleteGroup(${g.id})"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
+function deleteGroup(id) { groups = groups.filter(x => x.id !== id); syncToFirebase(); }
 
 // --- AVALIAÇÃO ---
 function renderIndividualEvalTable() {
@@ -167,7 +150,8 @@ function saveIndividualEvaluations() {
         const sk = row.querySelector('.eval-curr').dataset.skill;
         evaluations[p][sk] = { current: parseInt(row.querySelector('.eval-curr').value)||0, target: parseInt(row.querySelector('.eval-targ').value)||0 };
     });
-    saveLocal(); alert("Notas salvas no navegador!");
+    syncToFirebase();
+    alert("Dados enviados para o Google Firebase!");
 }
 
 function renderGroupEvalTable() {
@@ -187,7 +171,7 @@ function saveGroupTargets() {
         const input = row.querySelector('.group-targ-input');
         groupTargets[g][input.dataset.skill] = parseInt(input.value) || 0;
     });
-    saveLocal(); alert("Targets do grupo salvos!");
+    syncToFirebase();
 }
 
 // --- RADAR & PDI ---
@@ -215,13 +199,13 @@ function renderPDIRadar() {
         options: { scales: { r: { min: 0, max: 5 } } }
     });
 
-    let html = "<h3>Plano de Ação (PDI)</h3>";
+    let html = "<h3>Sugestões de Desenvolvimento</h3>";
     skills.forEach(s => {
         const c = (evaluations[p] && evaluations[p][s.name]?.current) || 0;
         const t = getEffTarget(p, s.name);
         if(c < t) {
             const plan = skillPlans.find(pl => pl.skillName === s.name && pl.from <= c && pl.to > c);
-            html += `<div class="pdi-item" style="background:#fff; padding:10px; margin-bottom:5px; border-left:4px solid #2563eb;"><strong>${s.name}:</strong> ${plan ? plan.action : 'Defina uma regra de evolução para este nível.'}</div>`;
+            html += `<div style="background:#f8fafc; padding:10px; margin-bottom:5px; border-left:4px solid #2563eb;"><strong>${s.name}:</strong> ${plan ? plan.action : 'Sem regra definida.'}</div>`;
         }
     });
     document.getElementById('pdiActionPlan').innerHTML = html;
@@ -233,7 +217,7 @@ function renderMatrix() {
         skills.forEach(s => {
             const c = (evaluations[p.name] && evaluations[p.name][s.name]?.current) || 0;
             const t = getEffTarget(p.name, s.name);
-            const st = c >= t ? '<span style="color:green">OK</span>' : '<span style="color:red">GAP</span>';
+            const st = c >= t ? '<span style="color:#16a34a">OK</span>' : '<span style="color:#dc2626">GAP</span>';
             html += `<tr><td>${p.name}</td><td>${s.name}</td><td>${c}</td><td>${t}</td><td>${st}</td></tr>`;
         });
     });
@@ -241,9 +225,9 @@ function renderMatrix() {
 }
 
 function updateAllSelects() {
-    const pOpt = '<option value="">Selecione...</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
-    const sOpt = '<option value="">Selecione...</option>' + skills.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-    const gOpt = '<option value="">Selecione...</option>' + groups.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
+    const pOpt = '<option value="">Selecione Pessoa...</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    const sOpt = '<option value="">Selecione Competência...</option>' + skills.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    const gOpt = '<option value="">Selecione Grupo...</option>' + groups.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
     ['evalPersonSelect', 'pdiPersonSelect', 'personSelectField'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = pOpt; });
     ['skillPlanSelect'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = sOpt; });
     ['evalGroupSelect'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = gOpt; });
