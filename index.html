@@ -57,7 +57,7 @@
         <div id="cad-grupos" class="sub-content">
             <div class="grid-layout">
                 <div class="card">
-                    <h2>Novo Grupo</h2>
+                    <h2 id="groupFormTitle">Novo Grupo</h2>
                     <input id="groupName" placeholder="Nome do departamento">
                     <select id="personSelectField" onchange="addMemberToGroup(this)"></select>
                     <div id="selectedTagsContainer" class="tags-container" style="margin: 10px 0;"></div>
@@ -144,11 +144,13 @@
             <div class="card">
                 <h2>Alvos por Grupo</h2>
                 <select id="evalGroupSelect" onchange="renderGroupEvalTable()"></select>
-                <table>
-                    <thead><tr><th>Competência</th><th>Alvo Sugerido (3,6,9)</th><th>Descrição do Alvo</th></tr></thead>
-                    <tbody id="groupEvalBody"></tbody>
-                </table>
-                <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar Alvos do Grupo</button>
+                <div id="groupEvalContainer">
+                    <table>
+                        <thead><tr><th>Competência</th><th>Alvo Sugerido (3,6,9)</th><th>Descrição do Alvo</th></tr></thead>
+                        <tbody id="groupEvalBody"></tbody>
+                    </table>
+                    <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar Alvos do Grupo</button>
+                </div>
             </div>
         </div>
     </div>
@@ -157,10 +159,6 @@
         <div class="card">
             <h2>Radar e PDI Individual</h2>
             <div class="filter-container">
-                <div class="filter-group">
-                    <label>Filtrar Grupo:</label>
-                    <select id="pdiGroupFilter" onchange="filterPeopleByGroup(this.value)"></select>
-                </div>
                 <div class="filter-group">
                     <label>Selecionar Pessoa:</label>
                     <select id="pdiPersonSelect" onchange="renderPDIRadar()"></select>
@@ -182,7 +180,7 @@
             <h2>Matriz de Prontidão</h2>
             <table>
                 <thead>
-                    <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo Editável</th><th>Status</th><th>Ações de Desenvolvimento</th></tr>
+                    <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo Editável</th><th>Status</th><th>Plano de Ação</th></tr>
                 </thead>
                 <tbody id="matrixBody"></tbody>
             </table>

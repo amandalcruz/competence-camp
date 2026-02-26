@@ -62,3 +62,39 @@ td { padding: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.9rem
 .desc-cell { font-size: 0.8rem; color: var(--text-muted); max-width: 250px; }
 
 .tag-chip { background: #eff6ff; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; margin: 2px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #dbeafe; }
+
+/* Adicione ou atualize estas classes no seu style.css */
+
+.actions { display: flex; gap: 5px; justify-content: center; }
+
+.btn-edit { background: #f59e0b; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+.btn-delete { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+
+.tag-chip {
+    background: #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px;
+    font-size: 0.85rem;
+}
+
+.tag-close { cursor: pointer; color: #ef4444; }
+
+#groupEvalContainer { display: none; }
+
+.status-tag {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.75rem;
+}
+.status-ok { background: #dcfce7; color: #166534; }
+.status-gap { background: #fee2e2; color: #991b1b; }
+
+/* Layout PDI */
+.pdi-layout { display: flex; gap: 2rem; margin-top: 2rem; align-items: flex-start; }
+.radar-column { flex: 1; max-width: 450px; min-height: 400px; }
+.pdi-column { flex: 2; }
