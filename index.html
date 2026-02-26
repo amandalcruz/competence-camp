@@ -145,7 +145,7 @@
                 <h2>Alvos por Grupo</h2>
                 <select id="evalGroupSelect" onchange="renderGroupEvalTable()"></select>
                 <table>
-                    <thead><tr><th>Competência</th><th>Alvo Sugerido (3,6,9)</th></tr></thead>
+                    <thead><tr><th>Competência</th><th>Alvo Sugerido (3,6,9)</th><th>Descrição do Alvo</th></tr></thead>
                     <tbody id="groupEvalBody"></tbody>
                 </table>
                 <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar Alvos do Grupo</button>
@@ -157,18 +157,22 @@
         <div class="card">
             <h2>Radar e PDI Individual</h2>
             <div class="filter-container">
-                <div>
+                <div class="filter-group">
                     <label>Filtrar Grupo:</label>
                     <select id="pdiGroupFilter" onchange="filterPeopleByGroup(this.value)"></select>
                 </div>
-                <div>
+                <div class="filter-group">
                     <label>Selecionar Pessoa:</label>
                     <select id="pdiPersonSelect" onchange="renderPDIRadar()"></select>
                 </div>
             </div>
             <div class="pdi-layout">
-                <div class="radar-container"><canvas id="radarChart"></canvas></div>
-                <div id="pdiActionPlan" class="action-plan-container"></div>
+                <div class="radar-column">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <div class="pdi-column">
+                    <div id="pdiActionPlan" class="action-plan-container"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -178,7 +182,7 @@
             <h2>Matriz de Prontidão</h2>
             <table>
                 <thead>
-                    <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo</th><th>Status</th><th>Plano de Ação</th></tr>
+                    <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo Editável</th><th>Status</th><th>Ações de Desenvolvimento</th></tr>
                 </thead>
                 <tbody id="matrixBody"></tbody>
             </table>

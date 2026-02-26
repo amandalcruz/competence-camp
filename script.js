@@ -37,7 +37,7 @@ function sync() {
     db.ref('pdi_data').set({ people, skills, groups, skillPlans, evaluations, groupTargets, customActionPlans });
 }
 
-// LÓGICA DE TARGET DINÂMICO (Item 2: Maior entre indivíduo e grupos)
+// LÓGICA DE TARGET DINÂMICO
 function getEffectiveTarget(personName, skillName) {
     let maxTarget = (evaluations[personName] && evaluations[personName][skillName]?.target) || 0;
     groups.forEach(group => {
@@ -68,13 +68,12 @@ function openSubTab(evt, subTabId) {
     evt.currentTarget.classList.add("active");
 }
 
-// CADASTROS COM EDIÇÃO (Item 1)
+// CADASTROS COM EDIÇÃO
 function addPerson() {
     const name = document.getElementById('personName').value.trim();
     const role = document.getElementById('personRole').value;
     const manager = document.getElementById('personManager').value;
     if(!name) return alert("Nome obrigatório");
-
     if (editingInfo.type === 'people') {
         people[editingInfo.index] = { name, role, manager };
         editingInfo = { type: null, index: null };
@@ -93,7 +92,6 @@ function addSkill() {
     const description = document.getElementById('skillDescription').value;
     const type = document.getElementById('skillType').value;
     if(!name) return alert("Nome obrigatório");
-
     if (editingInfo.type === 'skills') {
         skills[editingInfo.index] = { name, description, type };
         editingInfo = { type: null, index: null };
@@ -123,43 +121,41 @@ function editItem(type, index) {
     }
 }
 
-// MATRIZ (Item 3: Sim ou Não)
+// MATRIZ (Item 1: Alvo e Plano de Ação Editáveis)
 function renderMatrix() {
     const body = document.getElementById('matrixBody');
     let html = "";
     people.forEach(p => {
         skills.forEach(s => {
-            const ev = (evaluations[p.name] && evaluations[p.name][s.name]) || { current: 0 };
-            const target = getEffectiveTarget(p.name, s.name);
-            const status = ev.current >= target ? '<span class="status-tag status-ok">OK</span>' : '<span class="status-tag status-gap">GAP</span>';
+            const ev = (evaluations[p.name] && evaluations[p.name][s.name]) || { current: 0, target: 0 };
+            const effectiveTarget = getEffectiveTarget(p.name, s.name);
+            const status = ev.current >= effectiveTarget ? '<span class="status-tag status-ok">OK</span>' : '<span class="status-tag status-gap">GAP</span>';
             const key = `${p.name}_${s.name}`;
-            const hasAction = (customActionPlans[key] && customActionPlans[key].customAction?.length > 2) ? 
-                '<span class="badge-sim">Sim</span>' : '<span class="badge-nao">Não</span>';
+            const pData = customActionPlans[key] || { customAction: '' };
 
             html += `<tr>
-                <td>${p.name}</td><td>${s.name}</td><td>${ev.current}</td><td>${target}</td><td>${status}</td><td>${hasAction}</td>
+                <td>${p.name}</td>
+                <td>${s.name}</td>
+                <td>${ev.current}</td>
+                <td><input type="number" step="3" min="0" max="9" value="${ev.target}" onchange="updateEvalRealTime('${p.name}','${s.name}','target',this.value); renderMatrix()"></td>
+                <td>${status}</td>
+                <td><textarea style="min-height:40px" onchange="updateActionData('${p.name}','${s.name}','customAction',this.value); renderMatrix()">${pData.customAction || ''}</textarea></td>
             </tr>`;
         });
     });
     body.innerHTML = html;
 }
 
-// PLANO DE AÇÃO E EXCEL (Item 4)
-function updateActionData(person, skill, field, value) {
-    const key = `${person}_${skill}`;
-    if (!customActionPlans[key]) customActionPlans[key] = {};
-    customActionPlans[key][field] = value;
-    sync();
-}
-
+// PLANO DE AÇÃO (Item 1: Apenas quem tem SIM no plano - aqui interpretado como conteúdo preenchido)
 function renderActionPlanTable() {
     const person = document.getElementById('filterActionPlanPerson').value;
     const body = document.getElementById('actionPlanTableBody');
     if (!person) { body.innerHTML = ""; return; }
 
     body.innerHTML = skills.filter(s => {
-        const ev = (evaluations[person] && evaluations[person][s.name]) || { current: 0 };
-        return ev.current < getEffectiveTarget(person, s.name);
+        const key = `${person}_${s.name}`;
+        // Filtra apenas competências onde o plano de ação não está vazio
+        return customActionPlans[key] && customActionPlans[key].customAction && customActionPlans[key].customAction.trim().length > 0;
     }).map(s => {
         const key = `${person}_${s.name}`;
         const pData = customActionPlans[key] || { customAction: '', deadline: '', priority: 'Média' };
@@ -180,101 +176,39 @@ function renderActionPlanTable() {
     }).join('');
 }
 
-function exportToExcel() {
-    const person = document.getElementById('filterActionPlanPerson').value;
-    if(!person) return alert("Selecione uma pessoa para exportar.");
-    const data = skills.filter(s => {
-        const ev = (evaluations[person] && evaluations[person][s.name]) || { current: 0 };
-        return ev.current < getEffectiveTarget(person, s.name);
-    }).map(s => {
-        const key = `${person}_${s.name}`;
-        return {
-            "Competência": s.name,
-            "Alvo": getEffectiveTarget(person, s.name),
-            "Ação de Desenvolvimento": customActionPlans[key]?.customAction || "",
-            "Data Limite": customActionPlans[key]?.deadline || "",
-            "Prioridade": customActionPlans[key]?.priority || "Média"
-        };
-    });
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "PDI");
-    XLSX.writeFile(wb, `Plano_Acao_${person}.xlsx`);
+// AVALIAÇÃO (Item 2 e 3: Validação 0,3,6,9 e Descrição Real-Time)
+function getDescriptionForLevel(skillName, level) {
+    if (!level || level == 0) return "";
+    const plan = skillPlans[skillName];
+    if (!plan) return "-";
+    if (level <= 3) return plan.n3 || "-";
+    if (level <= 6) return plan.n6 || "-";
+    return plan.n9 || "-";
 }
 
-// RESTANTE DAS FUNÇÕES (GRUPOS, RADAR, EVAL)
-function addMemberToGroup(select) {
-    const name = select.value;
-    if(name && !selectedMembers.includes(name)) { selectedMembers.push(name); renderTags(); }
-    select.value = "";
-}
-
-function renderTags() {
-    document.getElementById('selectedTagsContainer').innerHTML = selectedMembers.map(m => `<span class="tag-chip">${m} <i class="fas fa-times tag-close" onclick="removeTag('${m}')"></i></span>`).join('');
-}
-
-function removeTag(name) { selectedMembers = selectedMembers.filter(m => m !== name); renderTags(); }
-
-function saveGroup() {
-    const name = document.getElementById('groupName').value.trim();
-    if(!name || selectedMembers.length === 0) return alert("Preencha nome e membros");
-    groups.push({ name, members: [...selectedMembers] });
-    selectedMembers = []; document.getElementById('groupName').value = ""; renderTags(); sync();
-}
-
-function filterPeopleByGroup(groupName) {
-    const personSelect = document.getElementById('pdiPersonSelect');
-    if (!groupName) { updateAllSelects(); return; }
-    const group = groups.find(g => g.name === groupName);
-    const members = group ? group.members : [];
-    personSelect.innerHTML = '<option value="">Selecione...</option>' + members.map(m => `<option value="${m}">${m}</option>`).join('');
-}
-
-function renderPDIRadar() {
-    const person = document.getElementById('pdiPersonSelect').value;
-    const container = document.getElementById('pdiActionPlan');
-    if (!person) { if(radarChart) radarChart.destroy(); container.innerHTML = ""; return; }
-
-    const data = skills.map(s => {
-        return {
-            current: (evaluations[person] && evaluations[person][s.name]?.current) || 0,
-            target: getEffectiveTarget(person, s.name)
-        };
-    });
-
-    const ctx = document.getElementById('radarChart').getContext('2d');
-    if (radarChart) radarChart.destroy();
-    radarChart = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: skills.map(s => s.name),
-            datasets: [
-                { label: 'Atual', data: data.map(d => d.current), backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: '#2563eb' },
-                { label: 'Alvo', data: data.map(d => d.target), backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: '#10b981' }
-            ]
-        },
-        options: { scales: { r: { min: 0, max: 9 } } }
-    });
-
-    let html = "<h3>Próximos Passos (GAPs)</h3>";
-    skills.forEach(s => {
-        const ev = (evaluations[person] && evaluations[person][s.name]?.current) || 0;
-        const target = getEffectiveTarget(person, s.name);
-        if (ev < target) {
-            const plan = skillPlans[s.name] || {};
-            let action = target <= 3 ? plan.n3 : (target <= 6 ? plan.n6 : plan.n9);
-            html += `<div class="pdi-item"><strong>${s.name}</strong> <span class="gap-badge">Meta: ${target}</span><p>${action || "Sem regra definida."}</p></div>`;
-        }
-    });
-    container.innerHTML = html;
+function validateScore(val) {
+    const allowed = [0, 3, 6, 9];
+    let num = parseInt(val) || 0;
+    if (!allowed.includes(num)) {
+        if (num < 3) return 0;
+        if (num < 6) return 3;
+        if (num < 9) return 6;
+        return 9;
+    }
+    return num;
 }
 
 function updateEvalRealTime(person, skill, field, value) {
-    let val = parseInt(value) || 0;
-    if (field === 'target' && val > 0) { if (val <= 3) val = 3; else if (val <= 6) val = 6; else val = 9; }
+    let val = validateScore(value);
     if (!evaluations[person]) evaluations[person] = {};
     if (!evaluations[person][skill]) evaluations[person][skill] = { current: 0, target: 0 };
     evaluations[person][skill][field] = val;
+    
+    // Atualiza a descrição na UI em tempo real sem renderizar a tabela inteira
+    const rowId = `row_${person.replace(/\s/g, '')}_${skill.replace(/\s/g, '')}`;
+    const descId = field === 'current' ? `desc_curr_${rowId}` : `desc_targ_${rowId}`;
+    const descEl = document.getElementById(descId);
+    if (descEl) descEl.innerText = getDescriptionForLevel(skill, val);
 }
 
 function renderIndividualEvalTable() {
@@ -283,17 +217,16 @@ function renderIndividualEvalTable() {
     if (!person) { body.innerHTML = ""; return; }
     body.innerHTML = skills.map(s => {
         const ev = (evaluations[person] && evaluations[person][s.name]) || { current: 0, target: 0 };
+        const rowId = `row_${person.replace(/\s/g, '')}_${s.name.replace(/\s/g, '')}`;
         return `<tr>
             <td>${s.name}</td>
-            <td><input type="number" min="0" max="9" value="${ev.current}" oninput="updateEvalRealTime('${person}','${s.name}','current',this.value)"></td>
-            <td>${(skillPlans[s.name] && (ev.current <= 3 ? skillPlans[s.name].n3 : ev.current <= 6 ? skillPlans[s.name].n6 : skillPlans[s.name].n9)) || '-'}</td>
-            <td><input type="number" step="3" min="0" max="9" value="${ev.target}" oninput="updateEvalRealTime('${person}','${s.name}','target',this.value)"></td>
-            <td>${(skillPlans[s.name] && (ev.target <= 3 ? skillPlans[s.name].n3 : ev.target <= 6 ? skillPlans[s.name].n6 : skillPlans[s.name].n9)) || '-'}</td>
+            <td><input type="number" min="0" max="9" step="3" value="${ev.current}" oninput="updateEvalRealTime('${person}','${s.name}','current',this.value)"></td>
+            <td id="desc_curr_${rowId}" class="desc-cell">${getDescriptionForLevel(s.name, ev.current)}</td>
+            <td><input type="number" min="0" max="9" step="3" value="${ev.target}" oninput="updateEvalRealTime('${person}','${s.name}','target',this.value)"></td>
+            <td id="desc_targ_${rowId}" class="desc-cell">${getDescriptionForLevel(s.name, ev.target)}</td>
         </tr>`;
     }).join('');
 }
-
-function saveIndividualEvaluations() { sync(); alert("Salvo!"); }
 
 function renderGroupEvalTable() {
     const groupName = document.getElementById('evalGroupSelect').value;
@@ -301,19 +234,118 @@ function renderGroupEvalTable() {
     if (!groupName) { body.innerHTML = ""; return; }
     body.innerHTML = skills.map(s => {
         const target = (groupTargets[groupName] && groupTargets[groupName][s.name]) || 0;
-        return `<tr><td>${s.name}</td><td><input type="number" step="3" min="0" max="9" value="${target}" onchange="updateGroupTarget('${groupName}','${s.name}',this.value)"></td></tr>`;
+        const rowId = `group_${groupName.replace(/\s/g, '')}_${s.name.replace(/\s/g, '')}`;
+        return `<tr>
+            <td>${s.name}</td>
+            <td><input type="number" step="3" min="0" max="9" value="${target}" oninput="updateGroupTarget('${groupName}','${s.name}',this.value)"></td>
+            <td id="desc_group_${rowId}" class="desc-cell">${getDescriptionForLevel(s.name, target)}</td>
+        </tr>`;
     }).join('');
 }
 
 function updateGroupTarget(group, skill, value) {
-    let val = parseInt(value) || 0;
-    if (val > 0) { if (val <= 3) val = 3; else if (val <= 6) val = 6; else val = 9; }
+    let val = validateScore(value);
     if (!groupTargets[group]) groupTargets[group] = {};
     groupTargets[group][skill] = val;
+    const descId = `desc_group_group_${group.replace(/\s/g, '')}_${skill.replace(/\s/g, '')}`;
+    const descEl = document.getElementById(descId);
+    if (descEl) descEl.innerText = getDescriptionForLevel(skill, val);
 }
 
-function saveGroupTargets() { sync(); alert("Alvos do grupo salvos!"); }
+// DESENVOLVIMENTO (Item 4: Radar menor lado a lado com PDI)
+function renderPDIRadar() {
+    const person = document.getElementById('pdiPersonSelect').value;
+    const container = document.getElementById('pdiActionPlan');
+    if (!person) { if(radarChart) radarChart.destroy(); container.innerHTML = ""; return; }
 
+    const data = skills.map(s => ({
+        current: (evaluations[person] && evaluations[person][s.name]?.current) || 0,
+        target: getEffectiveTarget(person, s.name)
+    }));
+
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    if (radarChart) radarChart.destroy();
+    radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: skills.map(s => s.name),
+            datasets: [
+                { label: 'Atual', data: data.map(d => d.current), backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: '#2563eb', pointRadius: 4 },
+                { label: 'Alvo', data: data.map(d => d.target), backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: '#10b981', pointRadius: 4 }
+            ]
+        },
+        options: { 
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { r: { min: 0, max: 9, ticks: { stepSize: 3 } } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    let html = "<h3>Plano de Desenvolvimento</h3>";
+    skills.forEach(s => {
+        const ev = (evaluations[person] && evaluations[person][s.name]?.current) || 0;
+        const target = getEffectiveTarget(person, s.name);
+        if (ev < target) {
+            const plan = skillPlans[s.name] || {};
+            let action = target <= 3 ? plan.n3 : (target <= 6 ? plan.n6 : plan.n9);
+            html += `<div class="pdi-item"><strong>${s.name}</strong> <span class="gap-badge">Alvo: ${target}</span><p>${action || "Sem regra definida."}</p></div>`;
+        }
+    });
+    container.innerHTML = html;
+}
+
+// DEMAIS FUNÇÕES DE SUPORTE
+function updateActionData(person, skill, field, value) {
+    const key = `${person}_${skill}`;
+    if (!customActionPlans[key]) customActionPlans[key] = {};
+    customActionPlans[key][field] = value;
+    sync();
+}
+
+function exportToExcel() {
+    const person = document.getElementById('filterActionPlanPerson').value;
+    if(!person) return alert("Selecione uma pessoa.");
+    const data = skills.filter(s => {
+        const key = `${person}_${s.name}`;
+        return customActionPlans[key] && customActionPlans[key].customAction;
+    }).map(s => {
+        const key = `${person}_${s.name}`;
+        return {
+            "Competência": s.name,
+            "Alvo": getEffectiveTarget(person, s.name),
+            "Ação": customActionPlans[key].customAction,
+            "Data Limite": customActionPlans[key].deadline,
+            "Prioridade": customActionPlans[key].priority
+        };
+    });
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "PDI");
+    XLSX.writeFile(wb, `PDI_${person}.xlsx`);
+}
+
+function addMemberToGroup(select) {
+    const name = select.value;
+    if(name && !selectedMembers.includes(name)) { selectedMembers.push(name); renderTags(); }
+    select.value = "";
+}
+function renderTags() { document.getElementById('selectedTagsContainer').innerHTML = selectedMembers.map(m => `<span class="tag-chip">${m} <i class="fas fa-times tag-close" onclick="removeTag('${m}')"></i></span>`).join(''); }
+function removeTag(name) { selectedMembers = selectedMembers.filter(m => m !== name); renderTags(); }
+function saveGroup() {
+    const name = document.getElementById('groupName').value.trim();
+    if(!name || selectedMembers.length === 0) return alert("Erro");
+    groups.push({ name, members: [...selectedMembers] });
+    selectedMembers = []; document.getElementById('groupName').value = ""; sync();
+}
+function filterPeopleByGroup(groupName) {
+    const personSelect = document.getElementById('pdiPersonSelect');
+    if (!groupName) { updateAllSelects(); return; }
+    const group = groups.find(g => g.name === groupName);
+    personSelect.innerHTML = '<option value="">Selecione...</option>' + (group ? group.members.map(m => `<option value="${m}">${m}</option>`).join('') : '');
+}
+function saveIndividualEvaluations() { sync(); alert("Avaliações salvas!"); }
+function saveGroupTargets() { sync(); alert("Alvos do grupo salvos!"); }
 function loadSkillPlanForm() {
     const skill = document.getElementById('skillPlanSelect').value;
     const form = document.getElementById('skillPlanForm');
@@ -324,33 +356,16 @@ function loadSkillPlanForm() {
     document.getElementById('planN6').value = plan.n6;
     document.getElementById('planN9').value = plan.n9;
 }
-
 function saveSkillPlan() {
     const skill = document.getElementById('skillPlanSelect').value;
     skillPlans[skill] = { n3: document.getElementById('planN3').value, n6: document.getElementById('planN6').value, n9: document.getElementById('planN9').value };
     sync(); alert("Salvo!");
 }
-
-function renderAll() {
-    renderPeople(); renderSkills(); renderGroups(); renderSkillPlansTable(); updateAllSelects();
-}
-
-function renderPeople() {
-    document.getElementById('peopleList').innerHTML = people.map((p, i) => `<tr><td>${p.name}</td><td>${p.role}</td><td>${p.manager}</td><td class="actions"><button onclick="editItem('people',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('people',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join('');
-}
-
-function renderSkills() {
-    document.getElementById('skillsList').innerHTML = skills.map((s, i) => `<tr><td>${s.name}</td><td>${s.type}</td><td>${s.description || '-'}</td><td class="actions"><button onclick="editItem('skills',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('skills',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join('');
-}
-
-function renderGroups() {
-    document.getElementById('groupTable').innerHTML = groups.map((g, i) => `<tr><td>${g.name}</td><td>${g.members.join(', ')}</td><td><button onclick="deleteItem('groups',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join('');
-}
-
-function renderSkillPlansTable() {
-    document.getElementById('skillPlansTableBody').innerHTML = Object.keys(skillPlans).map(k => `<tr><td>${k}</td><td>${skillPlans[k].n3}</td><td>${skillPlans[k].n6}</td><td>${skillPlans[k].n9}</td></tr>`).join('');
-}
-
+function renderAll() { renderPeople(); renderSkills(); renderGroups(); renderSkillPlansTable(); updateAllSelects(); }
+function renderPeople() { document.getElementById('peopleList').innerHTML = people.map((p, i) => `<tr><td>${p.name}</td><td>${p.role}</td><td>${p.manager}</td><td class="actions"><button onclick="editItem('people',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('people',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
+function renderSkills() { document.getElementById('skillsList').innerHTML = skills.map((s, i) => `<tr><td>${s.name}</td><td>${s.type}</td><td>${s.description || '-'}</td><td class="actions"><button onclick="editItem('skills',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('skills',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
+function renderGroups() { document.getElementById('groupTable').innerHTML = groups.map((g, i) => `<tr><td>${g.name}</td><td>${g.members.join(', ')}</td><td><button onclick="deleteItem('groups',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
+function renderSkillPlansTable() { document.getElementById('skillPlansTableBody').innerHTML = Object.keys(skillPlans).map(k => `<tr><td>${k}</td><td>${skillPlans[k].n3}</td><td>${skillPlans[k].n6}</td><td>${skillPlans[k].n9}</td></tr>`).join(''); }
 function updateAllSelects() {
     const pOpt = '<option value="">Selecione...</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
     const sOpt = '<option value="">Selecione...</option>' + skills.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -360,5 +375,4 @@ function updateAllSelects() {
     const eg = document.getElementById('evalGroupSelect'); if(eg) eg.innerHTML = gOpt;
     const gFilter = document.getElementById('pdiGroupFilter'); if(gFilter) gFilter.innerHTML = gOpt;
 }
-
 function deleteItem(type, index) { if(confirm("Excluir?")) { if(type==='people') people.splice(index,1); if(type==='skills') skills.splice(index,1); if(type==='groups') groups.splice(index,1); sync(); } }

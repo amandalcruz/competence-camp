@@ -44,9 +44,6 @@ td { padding: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.9rem
 .status-ok { background: #dcfce7; color: #166534; }
 .status-gap { background: #fef3c7; color: #92400e; }
 
-.badge-sim { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-.badge-nao { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-
 .grid-layout { display: grid; grid-template-columns: 350px 1fr; gap: 1.5rem; }
 .main-content, .sub-content { display: none; }
 .active { display: block !important; }
@@ -55,7 +52,13 @@ td { padding: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.9rem
 .sub-tab { background: none; border: none; padding: 0.5rem 0; color: var(--text-muted); cursor: pointer; }
 .sub-tab.active { color: var(--text-main); border-bottom: 2px solid var(--text-main); font-weight: bold; }
 
-.gap-badge { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+/* Radar Layout Corrigido */
+.pdi-layout { display: flex; gap: 2rem; align-items: flex-start; margin-top: 1.5rem; }
+.radar-column { flex: 0 0 450px; height: 450px; position: relative; }
+.pdi-column { flex: 1; }
+
 .pdi-item { border-left: 4px solid var(--primary); background: #f8fafc; padding: 1rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0; }
+.gap-badge { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+.desc-cell { font-size: 0.8rem; color: var(--text-muted); max-width: 250px; }
 
 .tag-chip { background: #eff6ff; color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; margin: 2px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #dbeafe; }
