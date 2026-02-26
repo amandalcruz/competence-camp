@@ -105,9 +105,9 @@
                         <option value="">Selecione uma Competência</option>
                     </select>
                     <div id="skillPlanForm" style="display:none; margin-top:15px;">
-                        <label>Ações Nível 3</label><textarea id="planN3"></textarea>
-                        <label>Ações Nível 6</label><textarea id="planN6"></textarea>
-                        <label>Ações Nível 9</label><textarea id="planN9"></textarea>
+                        <label>Ações Nível 1 a 3</label><textarea id="planN3"></textarea>
+                        <label>Ações Nível 4 a 6</label><textarea id="planN6"></textarea>
+                        <label>Ações Nível 7 a 9</label><textarea id="planN9"></textarea>
                         <button class="btn-primary" onclick="saveSkillPlan()" style="width:100%">Salvar Regras</button>
                     </div>
                 </div>
@@ -163,7 +163,7 @@
             </div>
             <table>
                 <thead>
-                    <tr><th>Pessoa</th><th>Competência (GAP)</th><th>Ações de Desenvolvimento</th><th>Prioridade</th><th>Ação</th></tr>
+                    <tr><th>Competência (GAP)</th><th>Ações de Desenvolvimento</th><th>Prioridade</th></tr>
                 </thead>
                 <tbody id="actionPlanTableBody"></tbody>
             </table>
@@ -185,7 +185,9 @@
         <div class="card">
             <h2>Matriz de Prontidão</h2>
             <table>
-                <thead><tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo</th><th>Status</th></tr></thead>
+                <thead>
+                    <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo</th><th>Status</th><th>Prioridade</th></tr>
+                </thead>
                 <tbody id="matrixBody"></tbody>
             </table>
         </div>
