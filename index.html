@@ -37,36 +37,32 @@
         <div id="cad-pessoas" class="sub-content active">
             <div class="grid-layout">
                 <div class="card">
-                    <h2 id="personFormTitle">Gerenciar Pessoa</h2>
-                    <input type="hidden" id="editPersonId">
+                    <h2>Gerenciar Pessoa</h2>
                     <input id="personName" placeholder="Nome completo *">
                     <input id="personRole" placeholder="Cargo/Função">
                     <input id="personManager" placeholder="Gestor Responsável">
-                    <button class="btn-primary" onclick="addPerson()" id="btnSavePerson">Salvar Dados</button>
+                    <button class="btn-primary" onclick="addPerson()">Salvar Dados</button>
                 </div>
                 <div class="card">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead><tr><th>Nome</th><th>Função</th><th>Gestor</th><th>Ações</th></tr></thead>
-                            <tbody id="peopleList"></tbody>
-                        </table>
-                    </div>
+                    <table>
+                        <thead><tr><th>Nome</th><th>Função</th><th>Gestor</th><th>Ações</th></tr></thead>
+                        <tbody id="peopleList"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
         <div id="cad-grupos" class="sub-content">
             <div class="grid-layout">
                 <div class="card">
-                    <h2 id="groupFormTitle">Novo Grupo</h2>
-                    <input type="hidden" id="editGroupId">
+                    <h2>Novo Grupo</h2>
                     <input id="groupName" placeholder="Nome do departamento">
-                    <select id="personSelectField" onchange="handleSelectPerson(this)"></select>
-                    <div id="selectedTagsContainer" class="tags-container"></div>
-                    <button class="btn-primary" onclick="saveGroup()" id="btnSaveGroup" style="width:100%; margin-top:10px;">Registrar Grupo</button>
+                    <select id="personSelectField" onchange="addMemberToGroup(this)"></select>
+                    <div id="selectedTagsContainer" class="tags-container" style="margin: 10px 0;"></div>
+                    <button class="btn-primary" onclick="saveGroup()" style="width:100%">Registrar Grupo</button>
                 </div>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Grupo</th><th>Integrantes</th><th>Ações</th></tr></thead>
+                        <thead><tr><th>Grupo</th><th>Integrantes</th><th>Ação</th></tr></thead>
                         <tbody id="groupTable"></tbody>
                     </table>
                 </div>
@@ -84,7 +80,7 @@
                 <div class="card">
                     <h2>Competência</h2>
                     <input id="skillName" placeholder="Título">
-                    <textarea id="skillDescription" placeholder="Descrição da Competência..."></textarea>
+                    <textarea id="skillDescription" placeholder="Descrição base..."></textarea>
                     <select id="skillType">
                         <option value="Hard Skill">Hard Skill</option>
                         <option value="Soft Skill">Soft Skill</option>
@@ -102,34 +98,22 @@
         <div id="comp-plano" class="sub-content">
             <div class="grid-layout">
                 <div class="card">
-                    <h2>Vincular Ações</h2>
+                    <h2>Regras de Evolução</h2>
                     <select id="skillPlanSelect" onchange="loadSkillPlanForm()">
                         <option value="">Selecione uma Competência</option>
                     </select>
                     <div id="skillPlanForm" style="display:none; margin-top:15px;">
-                        <label>Ações Nível 3</label>
-                        <textarea id="planN3" placeholder="Ações para nível inicial..."></textarea>
-                        <label>Ações Nível 6</label>
-                        <textarea id="planN6" placeholder="Ações para nível intermediário..."></textarea>
-                        <label>Ações Nível 9</label>
-                        <textarea id="planN9" placeholder="Ações para nível avançado..."></textarea>
-                        <button class="btn-primary" onclick="saveSkillPlan()">Salvar Regras</button>
+                        <label>Ações Nível 3</label><textarea id="planN3"></textarea>
+                        <label>Ações Nível 6</label><textarea id="planN6"></textarea>
+                        <label>Ações Nível 9</label><textarea id="planN9"></textarea>
+                        <button class="btn-primary" onclick="saveSkillPlan()" style="width:100%">Salvar Regras</button>
                     </div>
                 </div>
                 <div class="card">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Competência</th>
-                                    <th>N3</th>
-                                    <th>N6</th>
-                                    <th>N9</th>
-                                </tr>
-                            </thead>
-                            <tbody id="skillPlansTableBody"></tbody>
-                        </table>
-                    </div>
+                    <table>
+                        <thead><tr><th>Competência</th><th>N3</th><th>N6</th><th>N9</th></tr></thead>
+                        <tbody id="skillPlansTableBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -150,57 +134,55 @@
                             <tr>
                                 <th>Competência</th>
                                 <th>Atual</th>
-                                <th>Descrição (Atual)</th>
+                                <th>Descrição</th>
                                 <th>Alvo</th>
-                                <th>Descrição (Alvo)</th>
+                                <th>Descrição Alvo</th>
                             </tr>
                         </thead>
                         <tbody id="individualEvalBody"></tbody>
                     </table>
                 </div>
-                <button class="btn-primary" onclick="saveIndividualEvaluations()" style="margin-top:20px;">Atualizar Notas</button>
+                <button class="btn-primary" onclick="saveIndividualEvaluations()" style="margin-top:20px;">Salvar Avaliação</button>
             </div>
         </div>
         <div id="aval-grupo" class="sub-content">
             <div class="card">
-                <h2>Target por Grupo (3, 6 ou 9)</h2>
+                <h2>Alvos por Grupo</h2>
                 <select id="evalGroupSelect" onchange="renderGroupEvalTable()"></select>
                 <table>
-                    <thead><tr><th>Competência</th><th>Target</th></tr></thead>
+                    <thead><tr><th>Competência</th><th>Alvo Sugerido</th></tr></thead>
                     <tbody id="groupEvalBody"></tbody>
                 </table>
-                <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Atualizar Targets</button>
+                <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar Alvos do Grupo</button>
             </div>
         </div>
     </div>
 
     <div id="plano_acao" class="main-content">
         <div class="card">
-            <h2>Plano de Ação Personalizado</h2>
-            <div style="margin-bottom: 15px;">
-                <label>Filtrar por Pessoa:</label>
+            <h2>Plano de Ação Personalizado (GAPs)</h2>
+            <div class="filter-container">
+                <label>Pessoa:</label>
                 <select id="filterActionPlanPerson" onchange="renderActionPlanTable()"></select>
             </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Pessoa</th>
-                            <th>Competência a Desenvolver</th>
-                            <th>Ações de Desenvolvimento (Editável)</th>
-                            <th>Prioridade</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="actionPlanTableBody"></tbody>
-                </table>
-            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pessoa</th>
+                        <th>Competência (GAP)</th>
+                        <th>Ações de Desenvolvimento</th>
+                        <th>Prioridade</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="actionPlanTableBody"></tbody>
+            </table>
         </div>
     </div>
 
     <div id="desenvolvimento" class="main-content">
         <div class="card">
-            <h2>Radar de Competências e PDI</h2>
+            <h2>Radar e PDI Individual</h2>
             <select id="pdiPersonSelect" onchange="renderPDIRadar()"></select>
             <div class="pdi-layout">
                 <div class="radar-container"><canvas id="radarChart"></canvas></div>
@@ -212,12 +194,10 @@
     <div id="matriz" class="main-content">
         <div class="card">
             <h2>Matriz de Prontidão</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo</th><th>Status</th></tr></thead>
-                    <tbody id="matrixBody"></tbody>
-                </table>
-            </div>
+            <table>
+                <thead><tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo</th><th>Status</th></tr></thead>
+                <tbody id="matrixBody"></tbody>
+            </table>
         </div>
     </div>
 </main>
