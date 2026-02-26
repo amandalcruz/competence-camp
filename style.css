@@ -205,3 +205,51 @@ textarea {
     vertical-align: top;
     padding: 10px;
 }
+
+/* Ajustes para a nova aba de Plano de Ação */
+#actionPlanTableBody textarea {
+    min-height: 80px;
+    font-size: 0.8rem;
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+}
+
+#actionPlanTableBody textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+/* Ajuste de largura para as colunas de descrição na Avaliação */
+#individualEvalBody td:nth-child(3), 
+#individualEvalBody td:nth-child(5) {
+    max-width: 250px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    vertical-align: middle;
+}
+
+/* Estilização para o seletor de prioridade */
+select[id^="customPriority_"] {
+    width: auto !important;
+    padding: 4px 8px;
+    font-weight: 500;
+}
+
+/* Filtro da aba Plano de Ação */
+.filter-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.filter-container label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
