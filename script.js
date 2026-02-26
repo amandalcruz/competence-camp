@@ -7,7 +7,7 @@ let groupTargets = {};
 let selectedPeopleForGroup = [];
 let currentChart = null;
 
-// --- PERSISTÊNCIA (SAVE/LOAD) ---
+// --- SALVAMENTO LOCAL AUTOMÁTICO ---
 window.onload = () => {
     loadLocal();
     updateAllSelects();
@@ -15,11 +15,11 @@ window.onload = () => {
 
 function saveLocal() {
     const data = { people, skills, groups, skillPlans, evaluations, groupTargets };
-    localStorage.setItem('competence_camp_db', JSON.stringify(data));
+    localStorage.setItem('competence_camp_data', JSON.stringify(data));
 }
 
 function loadLocal() {
-    const data = localStorage.getItem('competence_camp_db');
+    const data = localStorage.getItem('competence_camp_data');
     if (data) {
         const p = JSON.parse(data);
         people = p.people || [];
@@ -34,31 +34,37 @@ function loadLocal() {
     }
 }
 
-// --- IMPORTAR / EXPORTAR ---
+// --- IMPORTAR / EXPORTAR ARQUIVO ---
 function exportData() {
     const data = { people, skills, groups, skillPlans, evaluations, groupTargets };
-    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "backup_competence_camp.json";
+    a.download = `backup_pdi_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
     a.click();
 }
 
 function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-        const p = JSON.parse(e.target.result);
-        people = p.people || [];
-        skills = p.skills || [];
-        groups = p.groups || [];
-        skillPlans = p.skillPlans || [];
-        evaluations = p.evaluations || {};
-        groupTargets = p.groupTargets || {};
-        saveLocal();
-        location.reload();
+        try {
+            const p = JSON.parse(e.target.result);
+            people = p.people || [];
+            skills = p.skills || [];
+            groups = p.groups || [];
+            skillPlans = p.skillPlans || [];
+            evaluations = p.evaluations || {};
+            groupTargets = p.groupTargets || {};
+            saveLocal();
+            location.reload();
+        } catch (err) {
+            alert("Erro ao ler o arquivo de backup.");
+        }
     };
-    reader.readAsText(event.target.files[0]);
+    reader.readAsText(file);
 }
 
 // --- NAVEGAÇÃO ---
@@ -82,7 +88,7 @@ function openSubTab(evt, subName) {
     if (subName === 'comp-plano') renderSkillPlansTable();
 }
 
-// --- PESSOAS ---
+// --- CADASTROS ---
 function addPerson() {
     const name = document.getElementById('personName').value;
     if(!name) return;
@@ -97,11 +103,11 @@ function renderPeople() {
 
 function deletePerson(id) { people = people.filter(p => p.id !== id); saveLocal(); renderPeople(); updateAllSelects(); }
 
-// --- COMPETÊNCIAS ---
 function addSkill() {
     const name = document.getElementById('skillName').value;
     if(!name) return;
     skills.push({ id: Date.now(), name, type: document.getElementById('skillType').value });
+    document.getElementById('skillName').value = "";
     saveLocal(); renderSkills(); updateAllSelects();
 }
 
@@ -111,7 +117,7 @@ function renderSkills() {
 
 function deleteSkill(id) { skills = skills.filter(s => s.id !== id); saveLocal(); renderSkills(); updateAllSelects(); }
 
-// --- REGRAS DE EVOLUÇÃO ---
+// --- REGRAS ---
 function saveSkillPlan() {
     const skillName = document.getElementById('skillPlanSelect').value;
     const from = document.getElementById('planFrom').value;
@@ -161,7 +167,7 @@ function saveIndividualEvaluations() {
         const sk = row.querySelector('.eval-curr').dataset.skill;
         evaluations[p][sk] = { current: parseInt(row.querySelector('.eval-curr').value)||0, target: parseInt(row.querySelector('.eval-targ').value)||0 };
     });
-    saveLocal(); alert("Salvo!");
+    saveLocal(); alert("Notas salvas no navegador!");
 }
 
 function renderGroupEvalTable() {
@@ -181,7 +187,7 @@ function saveGroupTargets() {
         const input = row.querySelector('.group-targ-input');
         groupTargets[g][input.dataset.skill] = parseInt(input.value) || 0;
     });
-    saveLocal(); alert("Targets salvos!");
+    saveLocal(); alert("Targets do grupo salvos!");
 }
 
 // --- RADAR & PDI ---
@@ -215,7 +221,7 @@ function renderPDIRadar() {
         const t = getEffTarget(p, s.name);
         if(c < t) {
             const plan = skillPlans.find(pl => pl.skillName === s.name && pl.from <= c && pl.to > c);
-            html += `<div class="pdi-item"><strong>${s.name}:</strong> ${plan ? plan.action : 'Sem regra definida.'}</div>`;
+            html += `<div class="pdi-item" style="background:#fff; padding:10px; margin-bottom:5px; border-left:4px solid #2563eb;"><strong>${s.name}:</strong> ${plan ? plan.action : 'Defina uma regra de evolução para este nível.'}</div>`;
         }
     });
     document.getElementById('pdiActionPlan').innerHTML = html;
@@ -227,7 +233,7 @@ function renderMatrix() {
         skills.forEach(s => {
             const c = (evaluations[p.name] && evaluations[p.name][s.name]?.current) || 0;
             const t = getEffTarget(p.name, s.name);
-            const st = c >= t ? '<span class="status-tag status-ok">OK</span>' : '<span class="status-tag status-gap">GAP</span>';
+            const st = c >= t ? '<span style="color:green">OK</span>' : '<span style="color:red">GAP</span>';
             html += `<tr><td>${p.name}</td><td>${s.name}</td><td>${c}</td><td>${t}</td><td>${st}</td></tr>`;
         });
     });

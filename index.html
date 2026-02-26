@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Competence Camp | Gestão de Talentos</title>
+    <title>Competence Camp | PDI</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -16,8 +16,8 @@
         <span>Competence<strong>Camp</strong></span>
     </div>
     <div class="header-actions">
-        <button onclick="exportData()" class="btn-sync" title="Baixar Backup"><i class="fas fa-file-download"></i> Exportar Dados</button>
-        <button onclick="document.getElementById('importInput').click()" class="btn-sync" title="Carregar Backup"><i class="fas fa-file-upload"></i> Importar</button>
+        <button onclick="exportData()" class="btn-sync" style="background: #10b981;"><i class="fas fa-file-download"></i> Exportar Dados</button>
+        <button onclick="document.getElementById('importInput').click()" class="btn-sync" style="background: #64748b;"><i class="fas fa-file-upload"></i> Importar Backup</button>
         <input type="file" id="importInput" style="display:none" onchange="importData(event)">
     </div>
 </header>
@@ -108,12 +108,12 @@
                         <input id="planFrom" type="number" placeholder="De" min="0">
                         <input id="planTo" type="number" placeholder="Para" min="1">
                     </div>
-                    <textarea id="planAction" placeholder="O que fazer para evoluir?"></textarea>
+                    <textarea id="planAction" placeholder="Ação de desenvolvimento..."></textarea>
                     <button class="btn-primary" onclick="saveSkillPlan()">Salvar Regra</button>
                 </div>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Comp.</th><th>Nível</th><th>Ação</th><th>Excluir</th></tr></thead>
+                        <thead><tr><th>Comp.</th><th>Caminho</th><th>Ação</th></tr></thead>
                         <tbody id="skillPlansList"></tbody>
                     </table>
                 </div>
@@ -131,10 +131,10 @@
                 <h2>Lançar Notas</h2>
                 <select id="evalPersonSelect" onchange="renderIndividualEvalTable()"></select>
                 <table>
-                    <thead><tr><th>Competência</th><th>Nível Atual</th><th>Alvo Pessoal</th></tr></thead>
+                    <thead><tr><th>Competência</th><th>Atual</th><th>Alvo</th></tr></thead>
                     <tbody id="individualEvalBody"></tbody>
                 </table>
-                <button class="btn-primary" onclick="saveIndividualEvaluations()" style="margin-top:20px;">Salvar Notas</button>
+                <button class="btn-primary" onclick="saveIndividualEvaluations()" style="margin-top:20px;">Atualizar Notas</button>
             </div>
         </div>
         <div id="aval-grupo" class="sub-content">
@@ -142,19 +142,19 @@
                 <h2>Target por Grupo</h2>
                 <select id="evalGroupSelect" onchange="renderGroupEvalTable()"></select>
                 <table>
-                    <thead><tr><th>Competência</th><th>Target do Grupo</th></tr></thead>
+                    <thead><tr><th>Competência</th><th>Target</th></tr></thead>
                     <tbody id="groupEvalBody"></tbody>
                 </table>
-                <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar Targets</button>
+                <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Atualizar Targets</button>
             </div>
         </div>
     </div>
 
     <div id="desenvolvimento" class="main-content">
         <div class="card">
-            <h2>Análise de Gap e PDI</h2>
+            <h2>Radar de Competências e PDI</h2>
             <select id="pdiPersonSelect" onchange="renderPDIRadar()"></select>
-            <div class="pdi-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+            <div class="pdi-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top:20px;">
                 <div class="radar-container"><canvas id="radarChart"></canvas></div>
                 <div id="pdiActionPlan" class="action-plan-container"></div>
             </div>

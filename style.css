@@ -27,7 +27,30 @@ body {
     color: white;
     padding: 1rem 2rem;
     display: flex;
+    justify-content: space-between; /* Alinha logo na esquerda e botões na direita */
     align-items: center;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-sync {
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-sync:hover {
+    filter: brightness(1.1);
 }
 
 .logo { font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
@@ -120,28 +143,7 @@ td { padding: 0.75rem; border-bottom: 1px solid var(--border); }
 .tag-chip { background: #eff6ff; color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.2rem; border: 1px solid #dbeafe; }
 .tag-close { cursor: pointer; font-weight: bold; }
 
-.cloud-bar {
-    background: #1e293b;
-    padding: 10px 2rem;
-    color: white;
-}
 
-.cloud-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-#cloudIdInput {
-    background: #334155;
-    border: 1px solid #475569;
-    color: white;
-    padding: 5px 10px;
-    width: 250px;
-    margin-bottom: 0;
-}
 
 .btn-sync {
     background: var(--primary);
