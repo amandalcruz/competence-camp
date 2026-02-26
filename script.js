@@ -6,7 +6,8 @@ const firebaseConfig = {
     projectId: "competence-camp",
     storageBucket: "competence-camp.firebasestorage.app",
     messagingSenderId: "396090192687",
-    appId: "1:396090192687:web:b549b72dab7b40adede7da"
+    appId: "1:396090192687:web:b549b72dab7b40adede7da",
+	measurementId: "G-TZKM3B55K6"
 };
 
 firebase.initializeApp(firebaseConfig);
