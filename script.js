@@ -67,7 +67,7 @@ function openSubTab(evt, subTabId) {
     evt.currentTarget.classList.add("active");
 }
 
-// CADASTROS COM EDIÇÃO
+// CADASTROS
 function addPerson() {
     const name = document.getElementById('personName').value.trim();
     const role = document.getElementById('personRole').value;
@@ -127,7 +127,43 @@ function editItem(type, index) {
     }
 }
 
-// MATRIZ (Item 5: Plano de Ação Sim/Não)
+// EXCLUSÃO COM LIMPEZA EM CASCATA
+function deleteItem(type, index) {
+    if(confirm("Excluir definitivamente? Isso removerá todos os dados vinculados a este item.")) {
+        if(type==='people') {
+            people.splice(index,1);
+        } 
+        if(type==='skills') {
+            const skillName = skills[index].name;
+            
+            // 1. Remover das Regras de Evolução
+            if (skillPlans[skillName]) delete skillPlans[skillName];
+
+            // 2. Remover das Avaliações de cada pessoa
+            Object.keys(evaluations).forEach(personKey => {
+                if (evaluations[personKey][skillName]) delete evaluations[personKey][skillName];
+            });
+
+            // 3. Remover dos Alvos de Grupo
+            Object.keys(groupTargets).forEach(groupKey => {
+                if (groupTargets[groupKey][skillName]) delete groupTargets[groupKey][skillName];
+            });
+
+            // 4. Remover dos Planos de Ação Customizados (chave é Pessoa_Competencia)
+            Object.keys(customActionPlans).forEach(actionKey => {
+                if (actionKey.endsWith(`_${skillName}`)) delete customActionPlans[actionKey];
+            });
+
+            skills.splice(index,1);
+        } 
+        if(type==='groups') {
+            groups.splice(index,1);
+        } 
+        sync();
+    }
+}
+
+// MATRIZ
 function renderMatrix() {
     const body = document.getElementById('matrixBody');
     let html = "";
@@ -238,12 +274,7 @@ function renderGroupEvalTable() {
     const groupName = document.getElementById('evalGroupSelect').value;
     const container = document.getElementById('groupEvalContainer');
     const body = document.getElementById('groupEvalBody');
-    
-    if (!groupName) { 
-        container.style.display = "none";
-        return; 
-    }
-    
+    if (!groupName) { container.style.display = "none"; return; }
     container.style.display = "block";
     body.innerHTML = skills.map(s => {
         const target = (groupTargets[groupName] && groupTargets[groupName][s.name]) || 0;
@@ -265,7 +296,6 @@ function updateGroupTarget(group, skill, value) {
     if (descEl) descEl.innerText = getDescriptionForLevel(skill, val);
 }
 
-// DESENVOLVIMENTO (Item 4: Removido filtro de grupo)
 function renderPDIRadar() {
     const person = document.getElementById('pdiPersonSelect').value;
     const container = document.getElementById('pdiActionPlan');
@@ -348,7 +378,6 @@ function removeTag(name) { selectedMembers = selectedMembers.filter(m => m !== n
 function saveGroup() {
     const name = document.getElementById('groupName').value.trim();
     if(!name || selectedMembers.length === 0) return alert("Preencha o nome e adicione membros.");
-    
     if (editingInfo.type === 'groups') {
         groups[editingInfo.index] = { name, members: [...selectedMembers] };
         editingInfo = { type: null, index: null };
@@ -356,7 +385,6 @@ function saveGroup() {
     } else {
         groups.push({ name, members: [...selectedMembers] });
     }
-    
     selectedMembers = []; 
     document.getElementById('groupName').value = ""; 
     renderTags();
@@ -364,14 +392,7 @@ function saveGroup() {
 }
 
 function saveIndividualEvaluations() { sync(); alert("Avaliações salvas!"); }
-
-// Item 3: Ocultar competências e resetar filtro
-function saveGroupTargets() { 
-    sync(); 
-    alert("Alvos do grupo salvos!"); 
-    document.getElementById('evalGroupSelect').value = "";
-    document.getElementById('groupEvalContainer').style.display = "none";
-}
+function saveGroupTargets() { sync(); alert("Alvos do grupo salvos!"); document.getElementById('evalGroupSelect').value = ""; document.getElementById('groupEvalContainer').style.display = "none"; }
 
 function loadSkillPlanForm() {
     const skill = document.getElementById('skillPlanSelect').value;
@@ -388,14 +409,13 @@ function saveSkillPlan() {
     skillPlans[skill] = { n3: document.getElementById('planN3').value, n6: document.getElementById('planN6').value, n9: document.getElementById('planN9').value };
     sync(); alert("Salvo!");
 }
+
 function renderAll() { renderPeople(); renderSkills(); renderGroups(); renderSkillPlansTable(); updateAllSelects(); }
 function renderPeople() { document.getElementById('peopleList').innerHTML = people.map((p, i) => `<tr><td>${p.name}</td><td>${p.role}</td><td>${p.manager}</td><td class="actions"><button onclick="editItem('people',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('people',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
 function renderSkills() { document.getElementById('skillsList').innerHTML = skills.map((s, i) => `<tr><td>${s.name}</td><td>${s.type}</td><td>${s.description || '-'}</td><td class="actions"><button onclick="editItem('skills',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('skills',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
-
-// Item 1: Botão editar em grupos
 function renderGroups() { document.getElementById('groupTable').innerHTML = groups.map((g, i) => `<tr><td>${g.name}</td><td>${g.members.join(', ')}</td><td><button onclick="editItem('groups',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('groups',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
-
 function renderSkillPlansTable() { document.getElementById('skillPlansTableBody').innerHTML = Object.keys(skillPlans).map(k => `<tr><td>${k}</td><td>${skillPlans[k].n3}</td><td>${skillPlans[k].n6}</td><td>${skillPlans[k].n9}</td></tr>`).join(''); }
+
 function updateAllSelects() {
     const pOpt = '<option value="">Selecione...</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
     const sOpt = '<option value="">Selecione...</option>' + skills.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -404,4 +424,3 @@ function updateAllSelects() {
     const sp = document.getElementById('skillPlanSelect'); if(sp) sp.innerHTML = sOpt;
     const eg = document.getElementById('evalGroupSelect'); if(eg) eg.innerHTML = gOpt;
 }
-function deleteItem(type, index) { if(confirm("Excluir definitivamente?")) { if(type==='people') people.splice(index,1); if(type==='skills') skills.splice(index,1); if(type==='groups') groups.splice(index,1); sync(); } }
