@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Competence Camp | PDI</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -31,8 +31,8 @@
 <main class="container">
     <div id="cadastro" class="main-content active">
         <div class="sub-tabs">
-			<button class="sub-tab active" onclick="openSubTab(event,'cad-pessoas')">Pessoas</button>
-			<button class="sub-tab" onclick="openSubTab(event,'cad-grupos')">Grupos</button>
+            <button class="sub-tab active" onclick="openSubTab(event,'cad-pessoas')">Pessoas</button>
+            <button class="sub-tab" onclick="openSubTab(event,'cad-grupos')">Grupos</button>
         </div>
         <div id="cad-pessoas" class="sub-content active">
             <div class="grid-layout">
@@ -44,10 +44,12 @@
                     <button class="btn-primary" onclick="addPerson()">Salvar Dados</button>
                 </div>
                 <div class="card">
-                    <table>
-                        <thead><tr><th>Nome</th><th>Função</th><th>Gestor</th><th>Ações</th></tr></thead>
-                        <tbody id="peopleList"></tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>Nome</th><th>Função</th><th>Gestor</th><th>Ações</th></tr></thead>
+                            <tbody id="peopleList"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,13 +133,7 @@
                 <div class="table-wrapper">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Competência</th>
-                                <th>Atual</th>
-                                <th>Descrição</th>
-                                <th>Alvo</th>
-                                <th>Descrição Alvo</th>
-                            </tr>
+                            <tr><th>Competência</th><th>Atual</th><th>Descrição</th><th>Alvo</th><th>Descrição Alvo</th></tr>
                         </thead>
                         <tbody id="individualEvalBody"></tbody>
                     </table>
@@ -167,13 +163,7 @@
             </div>
             <table>
                 <thead>
-                    <tr>
-                        <th>Pessoa</th>
-                        <th>Competência (GAP)</th>
-                        <th>Ações de Desenvolvimento</th>
-                        <th>Prioridade</th>
-                        <th>Ação</th>
-                    </tr>
+                    <tr><th>Pessoa</th><th>Competência (GAP)</th><th>Ações de Desenvolvimento</th><th>Prioridade</th><th>Ação</th></tr>
                 </thead>
                 <tbody id="actionPlanTableBody"></tbody>
             </table>

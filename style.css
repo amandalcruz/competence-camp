@@ -253,3 +253,22 @@ select[id^="customPriority_"] {
     font-size: 0.9rem;
     color: var(--text-main);
 }
+
+/* Correção de visibilidade das abas */
+.main-content, .sub-content {
+    display: none !important;
+}
+
+.main-content.active, .sub-content.active {
+    display: block !important;
+}
+
+/* Melhoria na tabela para evitar sobreposição */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    min-width: 600px;
+}
