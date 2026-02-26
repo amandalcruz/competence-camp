@@ -7,7 +7,7 @@ const firebaseConfig = {
     storageBucket: "competence-camp.firebasestorage.app",
     messagingSenderId: "396090192687",
     appId: "1:396090192687:web:b549b72dab7b40adede7da",
-	measurementId: "G-TZKM3B55K6"
+    measurementId: "G-TZKM3B55K6"
 };
 
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
@@ -17,6 +17,7 @@ let people = [], skills = [], groups = [], skillPlans = {}, evaluations = {}, gr
 let selectedMembers = [];
 let radarChart = null;
 
+// INICIALIZAÇÃO E SINCRONIZAÇÃO
 window.onload = () => {
     db.ref('pdi_data').on('value', (snapshot) => {
         const data = snapshot.val() || {};
@@ -67,9 +68,14 @@ function addPerson() {
 function addSkill() {
     const name = document.getElementById('skillName').value.trim();
     if(!name) return alert("Nome obrigatório");
-    skills.push({ name, description: document.getElementById('skillDescription').value, type: document.getElementById('skillType').value });
+    skills.push({ 
+        name, 
+        description: document.getElementById('skillDescription').value, 
+        type: document.getElementById('skillType').value 
+    });
     sync();
     document.getElementById('skillName').value = "";
+    document.getElementById('skillDescription').value = "";
 }
 
 function addMemberToGroup(select) {
@@ -101,6 +107,7 @@ function saveGroup() {
     sync();
 }
 
+// REGRAS DE EVOLUÇÃO
 function loadSkillPlanForm() {
     const skill = document.getElementById('skillPlanSelect').value;
     const form = document.getElementById('skillPlanForm');
@@ -123,9 +130,17 @@ function saveSkillPlan() {
     alert("Regras salvas!");
 }
 
-// --- ATUALIZAÇÃO 1: DESCRIÇÃO EM TEMPO REAL ---
+// AVALIAÇÃO INDIVIDUAL (TRAVA 3, 6, 9 NO ALVO)
 function updateEvalRealTime(person, skill, field, value) {
-    const val = parseInt(value) || 0;
+    let val = parseInt(value) || 0;
+    
+    // Regra: Alvos só podem ser 0, 3, 6 ou 9
+    if (field === 'target' && val > 0) {
+        if (val <= 3) val = 3;
+        else if (val <= 6) val = 6;
+        else val = 9;
+    }
+
     if (!evaluations[person]) evaluations[person] = {};
     if (!evaluations[person][skill]) evaluations[person][skill] = { current: 0, target: 0 };
     evaluations[person][skill][field] = val;
@@ -159,7 +174,7 @@ function renderIndividualEvalTable() {
                 <td><strong>${s.name}</strong></td>
                 <td><input type="number" min="0" max="9" class="eval-curr" value="${ev.current}" oninput="updateEvalRealTime('${person}','${s.name}','current',this.value)"></td>
                 <td id="desc-curr-${s.name.replace(/\s+/g, '')}">${getDesc(ev.current)}</td>
-                <td><input type="number" min="0" max="9" class="eval-targ" value="${ev.target}" oninput="updateEvalRealTime('${person}','${s.name}','target',this.value)"></td>
+                <td><input type="number" step="3" min="0" max="9" class="eval-targ" value="${ev.target}" oninput="updateEvalRealTime('${person}','${s.name}','target',this.value)"></td>
                 <td id="desc-targ-${s.name.replace(/\s+/g, '')}">${getDesc(ev.target)}</td>
             </tr>
         `;
@@ -168,7 +183,7 @@ function renderIndividualEvalTable() {
 
 function saveIndividualEvaluations() { sync(); alert("Avaliação Salva!"); }
 
-// --- ATUALIZAÇÃO 2: EXPECTATIVA GRUPO CORRIGIDA ---
+// EXPECTATIVA GRUPO (TRAVA 3, 6, 9)
 function renderGroupEvalTable() {
     const groupName = document.getElementById('evalGroupSelect').value;
     const body = document.getElementById('groupEvalBody');
@@ -179,24 +194,40 @@ function renderGroupEvalTable() {
         return `
             <tr>
                 <td>${s.name}</td>
-                <td><input type="number" class="group-targ-input" value="${target}" onchange="updateGroupTarget('${groupName}','${s.name}',this.value)"></td>
+                <td><input type="number" step="3" min="0" max="9" class="group-targ-input" value="${target}" onchange="updateGroupTarget('${groupName}','${s.name}',this.value)"></td>
             </tr>
         `;
     }).join('');
 }
 
 function updateGroupTarget(group, skill, value) {
+    let val = parseInt(value) || 0;
+    if (val > 0) {
+        if (val <= 3) val = 3; else if (val <= 6) val = 6; else val = 9;
+    }
     if (!groupTargets[group]) groupTargets[group] = {};
-    groupTargets[group][skill] = parseInt(value) || 0;
+    groupTargets[group][skill] = val;
 }
 
 function saveGroupTargets() { sync(); alert("Alvos do grupo salvos!"); }
 
-// --- ATUALIZAÇÃO 3: PDI LÓGICA NÍVEL ACIMA ---
+// PDI & RADAR (FILTRO POR GRUPO E LOGICA DE METAS)
+function filterPeopleByGroup(groupName) {
+    const personSelect = document.getElementById('pdiPersonSelect');
+    if (!groupName) {
+        updateAllSelects();
+        return;
+    }
+    const group = groups.find(g => g.name === groupName);
+    const members = group ? group.members : [];
+    let options = '<option value="">Selecione...</option>' + members.map(m => `<option value="${m}">${m}</option>`).join('');
+    personSelect.innerHTML = options;
+}
+
 function renderPDIRadar() {
     const person = document.getElementById('pdiPersonSelect').value;
     const container = document.getElementById('pdiActionPlan');
-    if (!person) return;
+    if (!person) { if(radarChart) radarChart.destroy(); container.innerHTML = ""; return; }
 
     const data = skills.map(s => (evaluations[person] && evaluations[person][s.name]) || { current: 0, target: 0 });
     const ctx = document.getElementById('radarChart').getContext('2d');
@@ -218,12 +249,12 @@ function renderPDIRadar() {
         const ev = (evaluations[person] && evaluations[person][s.name]) || { current: 0, target: 0 };
         if (ev.current < ev.target) {
             const plan = skillPlans[s.name] || {};
-            const nextLevel = ev.current + 1;
-            let nextAction = nextLevel <= 3 ? plan.n3 : (nextLevel <= 6 ? plan.n6 : plan.n9);
+            // Usa a meta real (3, 6 ou 9) definida na avaliação
+            let action = ev.target <= 3 ? plan.n3 : (ev.target <= 6 ? plan.n6 : plan.n9);
             html += `
                 <div class="pdi-item">
-                    <strong>${s.name}</strong> <span class="gap-badge">Meta: Nível ${nextLevel}</span>
-                    <p style="margin-top:5px;">${nextAction || "Defina regras para esta competência."}</p>
+                    <strong>${s.name}</strong> <span class="gap-badge">Meta: Nível ${ev.target}</span>
+                    <p style="margin-top:5px;">${action || "Defina regras para esta competência."}</p>
                 </div>
             `;
         }
@@ -231,7 +262,7 @@ function renderPDIRadar() {
     container.innerHTML = html;
 }
 
-// --- ATUALIZAÇÃO 4: MATRIZ COM STATUS E PRIORIDADE ---
+// MATRIZ (PRIORIDADE INTEGRADA)
 function renderMatrix() {
     const body = document.getElementById('matrixBody');
     let html = "";
@@ -265,14 +296,43 @@ function updatePriority(person, skill, priority) {
     sync();
 }
 
+// PLANO DE AÇÃO (EDITÁVEL E INTEGRADO)
+function updateCustomAction(person, skill, text) {
+    const prioKey = `${person}_${skill}`;
+    if (!customActionPlans[prioKey]) customActionPlans[prioKey] = {};
+    customActionPlans[prioKey].customAction = text;
+    sync();
+}
+
 function renderActionPlanTable() {
     const person = document.getElementById('filterActionPlanPerson').value;
     const body = document.getElementById('actionPlanTableBody');
     if (!person) { body.innerHTML = ""; return; }
-    body.innerHTML = skills.filter(s => (evaluations[person] && evaluations[person][s.name] && evaluations[person][s.name].current < evaluations[person][s.name].target)).map(s => {
+
+    body.innerHTML = skills.filter(s => {
+        const ev = (evaluations[person] && evaluations[person][s.name]) || { current: 0, target: 0 };
+        return ev.current < ev.target;
+    }).map(s => {
         const prioKey = `${person}_${s.name}`;
-        const p = (customActionPlans[prioKey] && customActionPlans[prioKey].priority) || "Média";
-        return `<tr><td>${s.name}</td><td>Regras do próximo nível...</td><td>${p}</td></tr>`;
+        const pData = customActionPlans[prioKey] || { priority: 'Média', customAction: '' };
+        
+        const ev = evaluations[person][s.name];
+        const plan = skillPlans[s.name] || {};
+        const suggestedAction = ev.target <= 3 ? plan.n3 : (ev.target <= 6 ? plan.n6 : plan.n9);
+        const actionText = pData.customAction || suggestedAction || "";
+
+        return `
+            <tr>
+                <td><strong>${s.name}</strong><br><small>Nível Atual: ${ev.current} | Meta: ${ev.target}</small></td>
+                <td>
+                    <textarea 
+                        onchange="updateCustomAction('${person}','${s.name}',this.value)"
+                        style="width:100%; min-height:100px; padding:10px; border-radius:4px; border:1px solid #ddd;"
+                        placeholder="Descreva as ações de desenvolvimento...">${actionText}</textarea>
+                </td>
+                <td><span class="badge" style="background:#f1f5f9; padding:5px 10px; border-radius:4px;">${pData.priority}</span></td>
+            </tr>
+        `;
     }).join('');
 }
 
@@ -286,7 +346,13 @@ function renderPeople() {
 }
 
 function renderSkills() {
-    document.getElementById('skillsList').innerHTML = skills.map((s, i) => `<tr><td>${s.name}</td><td>${s.type}</td><td><button onclick="deleteItem('skills',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+    document.getElementById('skillsList').innerHTML = skills.map((s, i) => `
+        <tr>
+            <td>${s.name}</td>
+            <td>${s.type}</td>
+            <td style="font-size: 0.8rem; color: #64748b; max-width: 300px;">${s.description || '-'}</td>
+            <td><button onclick="deleteItem('skills',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td>
+        </tr>`).join('');
 }
 
 function renderGroups() {
@@ -301,15 +367,17 @@ function updateAllSelects() {
     const pOpt = '<option value="">Selecione...</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
     const sOpt = '<option value="">Selecione...</option>' + skills.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
     const gOpt = '<option value="">Selecione...</option>' + groups.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
+    
     ['personSelectField', 'evalPersonSelect', 'pdiPersonSelect', 'filterActionPlanPerson'].forEach(id => {
         const el = document.getElementById(id); if(el) el.innerHTML = pOpt;
     });
     const sp = document.getElementById('skillPlanSelect'); if(sp) sp.innerHTML = sOpt;
     const eg = document.getElementById('evalGroupSelect'); if(eg) eg.innerHTML = gOpt;
+    const gFilter = document.getElementById('pdiGroupFilter'); if(gFilter) gFilter.innerHTML = gOpt;
 }
 
 function deleteItem(type, index) {
-    if(!confirm("Excluir?")) return;
+    if(!confirm("Deseja realmente excluir este item?")) return;
     if(type === 'people') people.splice(index, 1);
     if(type === 'skills') skills.splice(index, 1);
     if(type === 'groups') groups.splice(index, 1);

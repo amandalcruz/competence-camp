@@ -23,9 +23,9 @@
     <button class="main-tab active" onclick="openMainTab(event,'cadastro')"><i class="fas fa-user-plus"></i> Cadastro</button>
     <button class="main-tab" onclick="openMainTab(event,'competencias')"><i class="fas fa-list-check"></i> Competências</button>
     <button class="main-tab" onclick="openMainTab(event,'avaliacao')"><i class="fas fa-star"></i> Avaliação</button>
-    <button class="main-tab" onclick="openMainTab(event,'plano_acao')"><i class="fas fa-tasks"></i> Plano de Ação</button>
     <button class="main-tab" onclick="openMainTab(event,'desenvolvimento')"><i class="fas fa-bullseye"></i> PDI & Radar</button>
     <button class="main-tab" onclick="openMainTab(event,'matriz')"><i class="fas fa-th"></i> Matriz</button>
+    <button class="main-tab" onclick="openMainTab(event,'plano_acao')"><i class="fas fa-tasks"></i> Plano de Ação</button>
 </nav>
 
 <main class="container">
@@ -91,7 +91,7 @@
                 </div>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Nome</th><th>Tipo</th><th>Ação</th></tr></thead>
+                        <thead><tr><th>Nome</th><th>Tipo</th><th>Descrição</th><th>Ação</th></tr></thead>
                         <tbody id="skillsList"></tbody>
                     </table>
                 </div>
@@ -101,9 +101,7 @@
             <div class="grid-layout">
                 <div class="card">
                     <h2>Regras de Evolução</h2>
-                    <select id="skillPlanSelect" onchange="loadSkillPlanForm()">
-                        <option value="">Selecione uma Competência</option>
-                    </select>
+                    <select id="skillPlanSelect" onchange="loadSkillPlanForm()"></select>
                     <div id="skillPlanForm" style="display:none; margin-top:15px;">
                         <label>Ações Nível 1 a 3</label><textarea id="planN3"></textarea>
                         <label>Ações Nível 4 a 6</label><textarea id="planN6"></textarea>
@@ -133,7 +131,7 @@
                 <div class="table-wrapper">
                     <table>
                         <thead>
-                            <tr><th>Competência</th><th>Atual</th><th>Descrição</th><th>Alvo</th><th>Descrição Alvo</th></tr>
+                            <tr><th>Competência</th><th>Atual</th><th>Descrição</th><th>Alvo (3,6,9)</th><th>Descrição Alvo</th></tr>
                         </thead>
                         <tbody id="individualEvalBody"></tbody>
                     </table>
@@ -146,7 +144,7 @@
                 <h2>Alvos por Grupo</h2>
                 <select id="evalGroupSelect" onchange="renderGroupEvalTable()"></select>
                 <table>
-                    <thead><tr><th>Competência</th><th>Alvo Sugerido</th></tr></thead>
+                    <thead><tr><th>Competência</th><th>Alvo Sugerido (3,6,9)</th></tr></thead>
                     <tbody id="groupEvalBody"></tbody>
                 </table>
                 <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar Alvos do Grupo</button>
@@ -154,26 +152,19 @@
         </div>
     </div>
 
-    <div id="plano_acao" class="main-content">
-        <div class="card">
-            <h2>Plano de Ação Personalizado (GAPs)</h2>
-            <div class="filter-container">
-                <label>Pessoa:</label>
-                <select id="filterActionPlanPerson" onchange="renderActionPlanTable()"></select>
-            </div>
-            <table>
-                <thead>
-                    <tr><th>Competência (GAP)</th><th>Ações de Desenvolvimento</th><th>Prioridade</th></tr>
-                </thead>
-                <tbody id="actionPlanTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-
     <div id="desenvolvimento" class="main-content">
         <div class="card">
             <h2>Radar e PDI Individual</h2>
-            <select id="pdiPersonSelect" onchange="renderPDIRadar()"></select>
+            <div class="filter-container">
+                <div>
+                    <label>Filtrar Grupo:</label>
+                    <select id="pdiGroupFilter" onchange="filterPeopleByGroup(this.value)"></select>
+                </div>
+                <div>
+                    <label>Selecionar Pessoa:</label>
+                    <select id="pdiPersonSelect" onchange="renderPDIRadar()"></select>
+                </div>
+            </div>
             <div class="pdi-layout">
                 <div class="radar-container"><canvas id="radarChart"></canvas></div>
                 <div id="pdiActionPlan" class="action-plan-container"></div>
@@ -189,6 +180,22 @@
                     <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo</th><th>Status</th><th>Prioridade</th></tr>
                 </thead>
                 <tbody id="matrixBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="plano_acao" class="main-content">
+        <div class="card">
+            <h2>Plano de Ação Personalizado (GAPs)</h2>
+            <div class="filter-container">
+                <label>Pessoa:</label>
+                <select id="filterActionPlanPerson" onchange="renderActionPlanTable()"></select>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Competência (GAP)</th><th style="width: 50%;">Ações de Desenvolvimento</th><th>Prioridade</th></tr>
+                </thead>
+                <tbody id="actionPlanTableBody"></tbody>
             </table>
         </div>
     </div>
