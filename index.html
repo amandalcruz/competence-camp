@@ -6,6 +6,7 @@
     <title>Competence Camp | PDI</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -37,7 +38,7 @@
         <div id="cad-pessoas" class="sub-content active">
             <div class="grid-layout">
                 <div class="card">
-                    <h2>Gerenciar Pessoa</h2>
+                    <h2 id="personFormTitle">Gerenciar Pessoa</h2>
                     <input id="personName" placeholder="Nome completo *">
                     <input id="personRole" placeholder="Cargo/Função">
                     <input id="personManager" placeholder="Gestor Responsável">
@@ -80,7 +81,7 @@
         <div id="comp-cad" class="sub-content active">
             <div class="grid-layout">
                 <div class="card">
-                    <h2>Competência</h2>
+                    <h2 id="skillFormTitle">Competência</h2>
                     <input id="skillName" placeholder="Título">
                     <textarea id="skillDescription" placeholder="Descrição base..."></textarea>
                     <select id="skillType">
@@ -177,7 +178,7 @@
             <h2>Matriz de Prontidão</h2>
             <table>
                 <thead>
-                    <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo</th><th>Status</th><th>Prioridade</th></tr>
+                    <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo</th><th>Status</th><th>Plano de Ação</th></tr>
                 </thead>
                 <tbody id="matrixBody"></tbody>
             </table>
@@ -186,14 +187,17 @@
 
     <div id="plano_acao" class="main-content">
         <div class="card">
-            <h2>Plano de Ação Personalizado (GAPs)</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>Plano de Ação Personalizado (GAPs)</h2>
+                <button class="btn-success" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+            </div>
             <div class="filter-container">
                 <label>Pessoa:</label>
                 <select id="filterActionPlanPerson" onchange="renderActionPlanTable()"></select>
             </div>
             <table>
                 <thead>
-                    <tr><th>Competência (GAP)</th><th style="width: 50%;">Ações de Desenvolvimento</th><th>Prioridade</th></tr>
+                    <tr><th>Competência (GAP)</th><th style="width: 40%;">Ações de Desenvolvimento</th><th>Data Limite</th><th>Prioridade</th></tr>
                 </thead>
                 <tbody id="actionPlanTableBody"></tbody>
             </table>
