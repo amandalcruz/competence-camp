@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Competence Camp | PDI</title>
@@ -17,11 +16,6 @@
     <div class="logo">
         <i class="fas fa-chart-line"></i>
         <span>Competence<strong>Camp</strong></span>
-    </div>
-    <div class="header-actions">
-        <button onclick="exportData()" class="btn-sync" style="background: #10b981;"><i class="fas fa-file-download"></i> Exportar Dados</button>
-        <button onclick="document.getElementById('importInput').click()" class="btn-sync" style="background: #64748b;"><i class="fas fa-file-upload"></i> Importar Backup</button>
-        <input type="file" id="importInput" style="display:none" onchange="importData(event)">
     </div>
 </header>
 
@@ -42,11 +36,12 @@
         <div id="cad-pessoas" class="sub-content active">
             <div class="grid-layout">
                 <div class="card">
-                    <h2>Gerenciar Pessoa</h2>
+                    <h2 id="personFormTitle">Gerenciar Pessoa</h2>
+                    <input type="hidden" id="editPersonId">
                     <input id="personName" placeholder="Nome completo *">
                     <input id="personRole" placeholder="Cargo/Função">
                     <input id="personManager" placeholder="Gestor Responsável">
-                    <button class="btn-primary" onclick="addPerson()">Salvar Dados</button>
+                    <button class="btn-primary" onclick="addPerson()" id="btnSavePerson">Salvar Dados</button>
                 </div>
                 <div class="card">
                     <div class="table-wrapper">
@@ -61,11 +56,12 @@
         <div id="cad-grupos" class="sub-content">
             <div class="grid-layout">
                 <div class="card">
-                    <h2>Novo Grupo</h2>
+                    <h2 id="groupFormTitle">Novo Grupo</h2>
+                    <input type="hidden" id="editGroupId">
                     <input id="groupName" placeholder="Nome do departamento">
                     <select id="personSelectField" onchange="handleSelectPerson(this)"></select>
                     <div id="selectedTagsContainer" class="tags-container"></div>
-                    <button class="btn-primary" onclick="saveGroup()" style="width:100%; margin-top:10px;">Registrar Grupo</button>
+                    <button class="btn-primary" onclick="saveGroup()" id="btnSaveGroup" style="width:100%; margin-top:10px;">Registrar Grupo</button>
                 </div>
                 <div class="card">
                     <table>
@@ -103,21 +99,20 @@
             </div>
         </div>
         <div id="comp-plano" class="sub-content">
-            <div class="grid-layout">
-                <div class="card">
-                    <h2>Regra de Nível</h2>
-                    <select id="skillPlanSelect"></select>
-                    <div class="level-range" style="display:flex; gap:10px; margin-bottom:10px;">
-                        <input id="planFrom" type="number" placeholder="De" min="0">
-                        <input id="planTo" type="number" placeholder="Para" min="1">
-                    </div>
-                    <textarea id="planAction" placeholder="Ação de desenvolvimento..."></textarea>
-                    <button class="btn-primary" onclick="saveSkillPlan()">Salvar Regra</button>
-                </div>
-                <div class="card">
+            <div class="card">
+                <h2>Ações de Desenvolvimento por Nível</h2>
+                <div class="table-wrapper">
                     <table>
-                        <thead><tr><th>Comp.</th><th>Caminho</th><th>Ação</th></tr></thead>
-                        <tbody id="skillPlansList"></tbody>
+                        <thead>
+                            <tr>
+                                <th>Competência</th>
+                                <th>Ações Nível 3</th>
+                                <th>Ações Nível 6</th>
+                                <th>Ações Nível 9</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skillPlansTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -131,10 +126,10 @@
         </div>
         <div id="aval-pessoa" class="sub-content active">
             <div class="card">
-                <h2>Lançar Notas</h2>
+                <h2>Lançar Notas (3, 6 ou 9)</h2>
                 <select id="evalPersonSelect" onchange="renderIndividualEvalTable()"></select>
                 <table>
-                    <thead><tr><th>Competência</th><th>Atual</th><th>Alvo</th></tr></thead>
+                    <thead><tr><th>Competência</th><th>Atual (3/6/9)</th><th>Alvo (3/6/9)</th></tr></thead>
                     <tbody id="individualEvalBody"></tbody>
                 </table>
                 <button class="btn-primary" onclick="saveIndividualEvaluations()" style="margin-top:20px;">Atualizar Notas</button>
@@ -142,7 +137,7 @@
         </div>
         <div id="aval-grupo" class="sub-content">
             <div class="card">
-                <h2>Target por Grupo</h2>
+                <h2>Target por Grupo (3, 6 ou 9)</h2>
                 <select id="evalGroupSelect" onchange="renderGroupEvalTable()"></select>
                 <table>
                     <thead><tr><th>Competência</th><th>Target</th></tr></thead>
@@ -157,7 +152,7 @@
         <div class="card">
             <h2>Radar de Competências e PDI</h2>
             <select id="pdiPersonSelect" onchange="renderPDIRadar()"></select>
-            <div class="pdi-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top:20px;">
+            <div class="pdi-layout">
                 <div class="radar-container"><canvas id="radarChart"></canvas></div>
                 <div id="pdiActionPlan" class="action-plan-container"></div>
             </div>
