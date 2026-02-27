@@ -33,12 +33,12 @@
     <div id="cadastro" class="main-content active">
         <div class="sub-tabs">
             <button class="sub-tab active" onclick="openSubTab(event,'cad-pessoas')">Pessoas</button>
-            <button class="sub-tab" onclick="openSubTab(event,'cad-grupos')">Grupos</button>
+            <button class="sub-tab" onclick="openSubTab(event,'cad-grupos')">Times</button>
         </div>
         <div id="cad-pessoas" class="sub-content active">
             <div class="grid-layout">
                 <div class="card">
-                    <h2 id="personFormTitle">Gerenciar Pessoa</h2>
+                    <h2 id="personFormTitle">Gerenciar Pessoas</h2>
                     <input id="personName" placeholder="Nome completo *">
                     <input id="personRole" placeholder="Cargo/Função">
                     <input id="personManager" placeholder="Gestor Responsável">
@@ -57,15 +57,15 @@
         <div id="cad-grupos" class="sub-content">
             <div class="grid-layout">
                 <div class="card">
-                    <h2 id="groupFormTitle">Novo Grupo</h2>
-                    <input id="groupName" placeholder="Nome do departamento">
+                    <h2 id="groupFormTitle">Novo Time</h2>
+                    <input id="groupName" placeholder="Nome do time">
                     <select id="personSelectField" onchange="addMemberToGroup(this)"></select>
                     <div id="selectedTagsContainer" class="tags-container" style="margin: 10px 0;"></div>
-                    <button class="btn-primary" onclick="saveGroup()" style="width:100%">Registrar Grupo</button>
+                    <button class="btn-primary" onclick="saveGroup()" style="width:100%">Registrar Time</button>
                 </div>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Grupo</th><th>Integrantes</th><th>Ação</th></tr></thead>
+                        <thead><tr><th>Time</th><th>Integrantes</th><th>Ação</th></tr></thead>
                         <tbody id="groupTable"></tbody>
                     </table>
                 </div>
@@ -76,7 +76,7 @@
     <div id="competencias" class="main-content">
         <div class="sub-tabs">
             <button class="sub-tab active" onclick="openSubTab(event,'comp-cad')">Definições</button>
-            <button class="sub-tab" onclick="openSubTab(event,'comp-plano')">Regras de Evolução</button>
+            <button class="sub-tab" onclick="openSubTab(event,'comp-plano')">Níveis de Evolução</button>
         </div>
         <div id="comp-cad" class="sub-content active">
             <div class="grid-layout">
@@ -130,16 +130,16 @@
     <div id="avaliacao" class="main-content">
         <div class="sub-tabs">
             <button class="sub-tab active" onclick="openSubTab(event,'aval-pessoa')">Individual</button>
-            <button class="sub-tab" onclick="openSubTab(event,'aval-grupo')">Expectativa Grupo</button>
+            <button class="sub-tab" onclick="openSubTab(event,'aval-grupo')">Expectativa por Time</button>
         </div>
         <div id="aval-pessoa" class="sub-content active">
             <div class="card">
-                <h2>Lançar Notas</h2>
+                <h2>Avaliar</h2>
                 <select id="evalPersonSelect" onchange="renderIndividualEvalTable()"></select>
                 <div class="table-wrapper">
                     <table>
                         <thead>
-                            <tr><th>Competência</th><th>Atual</th><th>Descrição</th><th>Alvo (3,6,9)</th><th>Descrição Alvo</th></tr>
+                            <tr><th>Competência</th><th>Atual</th><th>Descrição</th><th>Target (3,6,9)</th><th>Descrição Target</th></tr>
                         </thead>
                         <tbody id="individualEvalBody"></tbody>
                     </table>
@@ -149,14 +149,14 @@
         </div>
         <div id="aval-grupo" class="sub-content">
             <div class="card">
-                <h2>Alvos por Grupo</h2>
+                <h2>Target por Time</h2>
                 <select id="evalGroupSelect" onchange="renderGroupEvalTable()"></select>
                 <div id="groupEvalContainer">
                     <table>
-                        <thead><tr><th>Competência</th><th>Alvo Sugerido (3,6,9)</th><th>Descrição do Alvo</th></tr></thead>
+                        <thead><tr><th>Competência</th><th>Target Sugerido (3,6,9)</th><th>Descrição do Target</th></tr></thead>
                         <tbody id="groupEvalBody"></tbody>
                     </table>
-                    <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar Alvos do Grupo</button>
+                    <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar</button>
                 </div>
             </div>
         </div>
@@ -188,7 +188,7 @@
             <div class="table-wrapper">
                 <table>
                     <thead>
-                        <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo Editável</th><th>Status</th><th>Plano de Ação</th></tr>
+                        <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Target</th><th>Status</th><th>Plano de Ação</th></tr>
                     </thead>
                     <tbody id="matrixBody"></tbody>
                 </table>
