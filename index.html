@@ -101,7 +101,7 @@
         <div id="comp-plano" class="sub-content">
             <div class="grid-layout">
                 <div class="card">
-                    <h2>Regras de Evolução</h2>
+                    <h2>Configurar Regras</h2>
                     <select id="skillPlanSelect" onchange="loadSkillPlanForm()"></select>
                     <div id="skillPlanForm" style="display:none; margin-top:15px;">
                         <label>Ações Nível 1 a 3</label><textarea id="planN3"></textarea>
@@ -112,7 +112,14 @@
                 </div>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Competência</th><th>N3</th><th>N6</th><th>N9</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Competência</th>
+                                <th>N3</th>
+                                <th>N6</th>
+                                <th>N9</th>
+                                <th>Ações</th> </tr>
+                        </thead>
                         <tbody id="skillPlansTableBody"></tbody>
                     </table>
                 </div>
@@ -178,12 +185,14 @@
     <div id="matriz" class="main-content">
         <div class="card">
             <h2>Matriz de Prontidão</h2>
-            <table>
-                <thead>
-                    <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo Editável</th><th>Status</th><th>Plano de Ação</th></tr>
-                </thead>
-                <tbody id="matrixBody"></tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Alvo Editável</th><th>Status</th><th>Plano de Ação</th></tr>
+                    </thead>
+                    <tbody id="matrixBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -197,12 +206,14 @@
                 <label>Pessoa:</label>
                 <select id="filterActionPlanPerson" onchange="renderActionPlanTable()"></select>
             </div>
-            <table>
-                <thead>
-                    <tr><th>Competência (GAP)</th><th style="width: 40%;">Ações de Desenvolvimento</th><th>Data Limite</th><th>Prioridade</th></tr>
-                </thead>
-                <tbody id="actionPlanTableBody"></tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr><th>Competência (GAP)</th><th style="width: 40%;">Ações de Desenvolvimento</th><th>Data Limite</th><th>Prioridade</th></tr>
+                    </thead>
+                    <tbody id="actionPlanTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </main>

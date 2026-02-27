@@ -135,25 +135,16 @@ function deleteItem(type, index) {
         } 
         if(type==='skills') {
             const skillName = skills[index].name;
-            
-            // 1. Remover das Regras de Evolução
             if (skillPlans[skillName]) delete skillPlans[skillName];
-
-            // 2. Remover das Avaliações de cada pessoa
             Object.keys(evaluations).forEach(personKey => {
                 if (evaluations[personKey][skillName]) delete evaluations[personKey][skillName];
             });
-
-            // 3. Remover dos Alvos de Grupo
             Object.keys(groupTargets).forEach(groupKey => {
                 if (groupTargets[groupKey][skillName]) delete groupTargets[groupKey][skillName];
             });
-
-            // 4. Remover dos Planos de Ação Customizados (chave é Pessoa_Competencia)
             Object.keys(customActionPlans).forEach(actionKey => {
                 if (actionKey.endsWith(`_${skillName}`)) delete customActionPlans[actionKey];
             });
-
             skills.splice(index,1);
         } 
         if(type==='groups') {
@@ -163,7 +154,67 @@ function deleteItem(type, index) {
     }
 }
 
-// MATRIZ
+// REGRAS DE EVOLUÇÃO (EDITAR E EXCLUIR)
+function editSkillPlan(skillName) {
+    const select = document.getElementById('skillPlanSelect');
+    select.value = skillName;
+    loadSkillPlanForm();
+    // Scroll suave para o formulário
+    document.getElementById('skillPlanForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteSkillPlan(skillName) {
+    if(confirm(`Remover as regras de evolução para "${skillName}"?`)) {
+        delete skillPlans[skillName];
+        sync();
+    }
+}
+
+function saveSkillPlan() {
+    const skill = document.getElementById('skillPlanSelect').value;
+    if(!skill) return alert("Selecione uma competência.");
+    
+    skillPlans[skill] = { 
+        n3: document.getElementById('planN3').value, 
+        n6: document.getElementById('planN6').value, 
+        n9: document.getElementById('planN9').value 
+    };
+    
+    // Limpa o formulário após salvar
+    document.getElementById('skillPlanSelect').value = "";
+    document.getElementById('skillPlanForm').style.display = 'none';
+    
+    sync(); 
+    alert("Regras salvas com sucesso!");
+}
+
+function loadSkillPlanForm() {
+    const skill = document.getElementById('skillPlanSelect').value;
+    const form = document.getElementById('skillPlanForm');
+    if(!skill) { form.style.display = 'none'; return; }
+    form.style.display = 'block';
+    const plan = skillPlans[skill] || { n3: '', n6: '', n9: '' };
+    document.getElementById('planN3').value = plan.n3;
+    document.getElementById('planN6').value = plan.n6;
+    document.getElementById('planN9').value = plan.n9;
+}
+
+function renderSkillPlansTable() { 
+    const body = document.getElementById('skillPlansTableBody');
+    body.innerHTML = Object.keys(skillPlans).map(k => `
+        <tr>
+            <td><strong>${k}</strong></td>
+            <td><small>${skillPlans[k].n3 || '-'}</small></td>
+            <td><small>${skillPlans[k].n6 || '-'}</small></td>
+            <td><small>${skillPlans[k].n9 || '-'}</small></td>
+            <td class="actions">
+                <button onclick="editSkillPlan('${k}')" class="btn-edit"><i class="fas fa-edit"></i></button>
+                <button onclick="deleteSkillPlan('${k}')" class="btn-delete"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`).join(''); 
+}
+
+// MATRIZ E AVALIAÇÕES (RESTANTE DO CÓDIGO)
 function renderMatrix() {
     const body = document.getElementById('matrixBody');
     let html = "";
@@ -386,7 +437,7 @@ function saveGroup() {
         groups.push({ name, members: [...selectedMembers] });
     }
     selectedMembers = []; 
-    document.getElementById('groupName').value = ""; 
+    document.getElementById('groupName').value = ""; x
     renderTags();
     sync();
 }
@@ -394,27 +445,10 @@ function saveGroup() {
 function saveIndividualEvaluations() { sync(); alert("Avaliações salvas!"); }
 function saveGroupTargets() { sync(); alert("Alvos do grupo salvos!"); document.getElementById('evalGroupSelect').value = ""; document.getElementById('groupEvalContainer').style.display = "none"; }
 
-function loadSkillPlanForm() {
-    const skill = document.getElementById('skillPlanSelect').value;
-    const form = document.getElementById('skillPlanForm');
-    if(!skill) { form.style.display = 'none'; return; }
-    form.style.display = 'block';
-    const plan = skillPlans[skill] || { n3: '', n6: '', n9: '' };
-    document.getElementById('planN3').value = plan.n3;
-    document.getElementById('planN6').value = plan.n6;
-    document.getElementById('planN9').value = plan.n9;
-}
-function saveSkillPlan() {
-    const skill = document.getElementById('skillPlanSelect').value;
-    skillPlans[skill] = { n3: document.getElementById('planN3').value, n6: document.getElementById('planN6').value, n9: document.getElementById('planN9').value };
-    sync(); alert("Salvo!");
-}
-
 function renderAll() { renderPeople(); renderSkills(); renderGroups(); renderSkillPlansTable(); updateAllSelects(); }
 function renderPeople() { document.getElementById('peopleList').innerHTML = people.map((p, i) => `<tr><td>${p.name}</td><td>${p.role}</td><td>${p.manager}</td><td class="actions"><button onclick="editItem('people',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('people',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
 function renderSkills() { document.getElementById('skillsList').innerHTML = skills.map((s, i) => `<tr><td>${s.name}</td><td>${s.type}</td><td>${s.description || '-'}</td><td class="actions"><button onclick="editItem('skills',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('skills',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
 function renderGroups() { document.getElementById('groupTable').innerHTML = groups.map((g, i) => `<tr><td>${g.name}</td><td>${g.members.join(', ')}</td><td><button onclick="editItem('groups',${i})" class="btn-edit"><i class="fas fa-edit"></i></button><button onclick="deleteItem('groups',${i})" class="btn-delete"><i class="fas fa-trash"></i></button></td></tr>`).join(''); }
-function renderSkillPlansTable() { document.getElementById('skillPlansTableBody').innerHTML = Object.keys(skillPlans).map(k => `<tr><td>${k}</td><td>${skillPlans[k].n3}</td><td>${skillPlans[k].n6}</td><td>${skillPlans[k].n9}</td></tr>`).join(''); }
 
 function updateAllSelects() {
     const pOpt = '<option value="">Selecione...</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
