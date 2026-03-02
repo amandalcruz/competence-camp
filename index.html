@@ -118,7 +118,8 @@
                                 <th>N3</th>
                                 <th>N6</th>
                                 <th>N9</th>
-                                <th>Ações</th> </tr>
+                                <th>Ações</th> 
+                            </tr>
                         </thead>
                         <tbody id="skillPlansTableBody"></tbody>
                     </table>
@@ -171,11 +172,11 @@
                     <select id="pdiPersonSelect" onchange="renderPDIRadar()"></select>
                 </div>
             </div>
-            <div class="pdi-layout">
-                <div class="radar-column">
-                    <canvas id="radarChart"></canvas>
+            <div class="pdi-layout-vertical">
+                <div class="radar-row">
+                    <canvas id="radarChart" style="max-height: 400px;"></canvas>
                 </div>
-                <div class="pdi-column">
+                <div class="pdi-row">
                     <div id="pdiActionPlan" class="action-plan-container"></div>
                 </div>
             </div>
@@ -185,10 +186,23 @@
     <div id="matriz" class="main-content">
         <div class="card">
             <h2>Matriz de Prontidão</h2>
+            <div class="filter-bar" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <input type="text" id="filterMatrixName" placeholder="Filtrar por nome..." oninput="renderMatrix()">
+                <select id="filterMatrixStatus" onchange="renderMatrix()">
+                    <option value="">Todos Status</option>
+                    <option value="OK">OK</option>
+                    <option value="GAP">GAP</option>
+                </select>
+                <select id="filterMatrixPlan" onchange="renderMatrix()">
+                    <option value="">Todos Planos</option>
+                    <option value="Sim">Com Plano</option>
+                    <option value="Não">Sem Plano</option>
+                </select>
+            </div>
             <div class="table-wrapper">
                 <table>
                     <thead>
-                        <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Target</th><th>Status</th><th>Plano de Ação</th></tr>
+                        <tr><th>Pessoa</th><th>Comp.</th><th>Atual</th><th>Target</th><th>GAP</th><th>Status</th><th>Plano de Ação</th></tr>
                     </thead>
                     <tbody id="matrixBody"></tbody>
                 </table>
