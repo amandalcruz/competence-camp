@@ -58,6 +58,9 @@ th { text-align: left; padding: 0.75rem; background: #f1f5f9; color: var(--text-
 td { padding: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
 tr:hover { background-color: #f8fafc; }
 
+/* Estilo para inputs dentro de tabelas */
+td input[type="number"] { width: 70px; margin-bottom: 0; }
+
 /* Actions & Tags */
 .actions { display: flex; gap: 8px; justify-content: flex-start; }
 .btn-edit { background: var(--warning); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
@@ -80,6 +83,9 @@ tr:hover { background-color: #f8fafc; }
 .pdi-item { border-left: 4px solid var(--primary); background: #ffffff; padding: 1.25rem; margin-bottom: 1rem; border-radius: 0 8px 8px 0; border: 1px solid var(--border); border-left-width: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 .pdi-item strong { display: block; margin-bottom: 0.25rem; font-size: 1rem; }
 .pdi-item p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; }
+
+/* Badge informativa de Time no nome da competência */
+.team-label { font-size: 0.7rem; color: var(--primary); font-weight: 600; text-transform: uppercase; display: block; margin-top: 2px; }
 
 .gap-badge { background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 8px; }
 .desc-cell { font-size: 0.8rem; color: var(--text-muted); max-width: 300px; line-height: 1.3; }

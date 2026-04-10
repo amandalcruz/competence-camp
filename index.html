@@ -88,11 +88,14 @@
                         <option value="Hard Skill">Hard Skill</option>
                         <option value="Soft Skill">Soft Skill</option>
                     </select>
+                    <select id="skillTeamSelect">
+                        <option value="">Competência Global (Todos)</option>
+                    </select>
                     <button class="btn-primary" onclick="addSkill()">Salvar</button>
                 </div>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Nome</th><th>Tipo</th><th>Descrição</th><th>Ação</th></tr></thead>
+                        <thead><tr><th>Nome</th><th>Tipo</th><th>Time</th><th>Ação</th></tr></thead>
                         <tbody id="skillsList"></tbody>
                     </table>
                 </div>
@@ -193,11 +196,6 @@
                     <option value="OK">OK</option>
                     <option value="GAP">GAP</option>
                 </select>
-                <select id="filterMatrixPlan" onchange="renderMatrix()">
-                    <option value="">Todos Planos</option>
-                    <option value="Sim">Com Plano</option>
-                    <option value="Não">Sem Plano</option>
-                </select>
             </div>
             <div class="table-wrapper">
                 <table>
@@ -214,7 +212,6 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2>Plano de Ação Personalizado (GAPs)</h2>
-                <button class="btn-success" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Exportar Excel</button>
             </div>
             <div class="filter-container">
                 <label>Pessoa:</label>
