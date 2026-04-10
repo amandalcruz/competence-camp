@@ -1,4 +1,3 @@
-// CONFIGURAÇÃO FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyBrvXWUSsA9H8vKm6-FGwUihB1WhAofpx0",
     authDomain: "competence-camp.firebaseapp.com",
@@ -47,7 +46,15 @@ function sync(specificNode = null, data = null) {
     }
 }
 
-// Lógica de Alvo Efetivo ajustada para competências divididas por time
+// FUNÇÃO MESTRE DE FILTRAGEM
+function getRelevantSkillsForPerson(personName) {
+    const personTeams = groups.filter(g => g.members && g.members.includes(personName)).map(g => g.name);
+    return skills.filter(s => {
+        if (!s.teams || s.teams.length === 0) return true; // Global
+        return s.teams.some(team => personTeams.includes(team)); // Se a pessoa está em algum dos times da comp
+    });
+}
+
 function getEffectiveTarget(personName, skillName) {
     let maxTarget = (evaluations[personName] && evaluations[personName][skillName]?.target) || 0;
     groups.forEach(group => {
@@ -102,11 +109,14 @@ function addSkill() {
     const name = document.getElementById('skillName').value.trim();
     const description = document.getElementById('skillDescription').value;
     const type = document.getElementById('skillType').value;
-    const team = document.getElementById('skillTeamSelect').value; // Novo Campo
     
+    // Captura múltiplos times selecionados
+    const teamSelect = document.getElementById('skillTeamSelect');
+    const selectedTeams = Array.from(teamSelect.selectedOptions).map(opt => opt.value);
+
     if(!name) return alert("Nome obrigatório");
     
-    const skillData = { name, description, type, team };
+    const skillData = { name, description, type, teams: selectedTeams };
     
     if (editingInfo.type === 'skills') {
         skills[editingInfo.index] = skillData;
@@ -116,9 +126,13 @@ function addSkill() {
         skills.push(skillData);
     }
     sync('skills', skills);
+    resetSkillForm();
+}
+
+function resetSkillForm() {
     document.getElementById('skillName').value = "";
     document.getElementById('skillDescription').value = "";
-    document.getElementById('skillTeamSelect').value = "";
+    document.getElementById('skillTeamSelect').selectedIndex = -1;
 }
 
 function editItem(type, index) {
@@ -128,14 +142,14 @@ function editItem(type, index) {
         document.getElementById('personName').value = p.name;
         document.getElementById('personRole').value = p.role;
         document.getElementById('personManager').value = p.manager;
-        document.getElementById('personFormTitle').innerText = "Editando: " + p.name;
     } else if (type === 'skills') {
         const s = skills[index];
         document.getElementById('skillName').value = s.name;
         document.getElementById('skillDescription').value = s.description;
         document.getElementById('skillType').value = s.type;
-        document.getElementById('skillTeamSelect').value = s.team || "";
-        document.getElementById('skillFormTitle').innerText = "Editando: " + s.name;
+        // Selecionar múltiplos times no select
+        const select = document.getElementById('skillTeamSelect');
+        Array.from(select.options).forEach(opt => opt.selected = (s.teams || []).includes(opt.value));
     } else if (type === 'groups') {
         const g = groups[index];
         document.getElementById('groupName').value = g.name;
@@ -180,8 +194,7 @@ function loadSkillPlanForm() {
 
 function renderSkillPlansTable() { 
     const body = document.getElementById('skillPlansTableBody');
-    const sortedPlans = Object.keys(skillPlans).sort();
-    body.innerHTML = sortedPlans.map(k => `
+    body.innerHTML = Object.keys(skillPlans).sort().map(k => `
         <tr>
             <td><strong>${k}</strong></td>
             <td><small>${skillPlans[k].n3 || '-'}</small></td>
@@ -189,7 +202,6 @@ function renderSkillPlansTable() {
             <td><small>${skillPlans[k].n9 || '-'}</small></td>
             <td class="actions">
                 <button onclick="editSkillPlan('${k}')" class="btn-edit"><i class="fas fa-edit"></i></button>
-                <button onclick="deleteSkillPlan('${k}')" class="btn-delete"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`).join(''); 
 }
@@ -199,14 +211,7 @@ function editSkillPlan(skillName) {
     loadSkillPlanForm();
 }
 
-function deleteSkillPlan(skillName) {
-    if(confirm(`Remover as regras de "${skillName}"?`)) {
-        delete skillPlans[skillName];
-        sync('skillPlans', skillPlans);
-    }
-}
-
-// MATRIZ COM FILTRO DE TIME EMBUTIDO
+// MATRIZ
 function renderMatrix() {
     const body = document.getElementById('matrixBody');
     const fName = document.getElementById('filterMatrixName').value.toLowerCase();
@@ -216,31 +221,26 @@ function renderMatrix() {
     people.forEach(p => {
         if (fName && !p.name.toLowerCase().includes(fName)) return;
 
-        // Descobrir times da pessoa
-        const personTeams = groups.filter(g => g.members && g.members.includes(p.name)).map(g => g.name);
-        
-        // Mostrar apenas competências Globais ou do Time da pessoa
-        const relevantSkills = skills.filter(s => !s.team || personTeams.includes(s.team));
+        const relevant = getRelevantSkillsForPerson(p.name);
 
-        relevantSkills.forEach(s => {
+        relevant.forEach(s => {
             const ev = (evaluations[p.name] && evaluations[p.name][s.name]) || { current: 0, target: 0 };
             const effectiveTarget = getEffectiveTarget(p.name, s.name);
             const gapValue = effectiveTarget - ev.current;
             const statusText = ev.current >= effectiveTarget ? 'OK' : 'GAP';
-            const statusHtml = statusText === 'OK' ? '<span class="status-tag status-ok">OK</span>' : '<span class="status-tag status-gap">GAP</span>';
             
+            if (fStatus && statusText !== fStatus) return;
+
             const key = `${p.name}_${s.name}`;
             const pData = customActionPlans[key] || { hasPlan: 'Não' };
 
-            if (fStatus && statusText !== fStatus) return;
-
             html += `<tr>
                 <td>${p.name}</td>
-                <td>${s.name} ${s.team ? `<br><small>(${s.team})</small>` : ''}</td>
+                <td>${s.name} <br><small style="color:var(--primary)">${s.teams?.length ? s.teams.join(', ') : 'Global'}</small></td>
                 <td>${ev.current}</td>
                 <td>${effectiveTarget}</td>
                 <td style="font-weight:bold; color: ${gapValue > 0 ? 'red' : 'green'}">${gapValue > 0 ? gapValue : 0}</td>
-                <td>${statusHtml}</td>
+                <td><span class="status-tag status-${statusText.toLowerCase()}">${statusText}</span></td>
                 <td>
                     <select onchange="updateActionData('${p.name}','${s.name}','hasPlan',this.value)">
                         <option value="Não" ${pData.hasPlan === 'Não' ? 'selected' : ''}>Não</option>
@@ -254,7 +254,7 @@ function renderMatrix() {
 }
 
 function updateEvalRealTime(person, skill, field, value) {
-    let val = validateScore(value);
+    let val = parseInt(value) || 0;
     if (!evaluations[person]) evaluations[person] = {};
     if (!evaluations[person][skill]) evaluations[person][skill] = { current: 0, target: 0 };
     evaluations[person][skill][field] = val;
@@ -268,55 +268,44 @@ function updateActionData(person, skill, field, value) {
     sync('customActionPlans', customActionPlans);
 }
 
-// PDI & RADAR (FILTRADO POR TIME)
+// PDI & RADAR
 function renderPDIRadar() {
     const person = document.getElementById('pdiPersonSelect').value;
     const container = document.getElementById('pdiActionPlan');
     if (!person) { if(radarChart) radarChart.destroy(); container.innerHTML = ""; return; }
 
-    const personTeams = groups.filter(g => g.members && g.members.includes(person)).map(g => g.name);
-    const relevantSkills = skills.filter(s => !s.team || personTeams.includes(s.team));
-
-    const dataCurrent = relevantSkills.map(s => (evaluations[person] && evaluations[person][s.name]?.current) || 0);
-    const dataTarget = relevantSkills.map(s => getEffectiveTarget(person, s.name));
+    const relevant = getRelevantSkillsForPerson(person);
+    const dataCurrent = relevant.map(s => (evaluations[person] && evaluations[person][s.name]?.current) || 0);
+    const dataTarget = relevant.map(s => getEffectiveTarget(person, s.name));
 
     const ctx = document.getElementById('radarChart').getContext('2d');
     if (radarChart) radarChart.destroy();
     radarChart = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: relevantSkills.map(s => s.name),
+            labels: relevant.map(s => s.name),
             datasets: [
-                { label: 'Atual', data: dataCurrent, backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: '#2563eb', pointRadius: 4 },
-                { label: 'Alvo', data: dataTarget, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: '#10b981', pointRadius: 4 }
+                { label: 'Atual', data: dataCurrent, backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: '#2563eb' },
+                { label: 'Alvo', data: dataTarget, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: '#10b981' }
             ]
         },
         options: { 
-            responsive: true,
             maintainAspectRatio: false,
-            scales: { r: { min: 0, max: 9, ticks: { stepSize: 3 } } },
-            plugins: { legend: { position: 'bottom' } }
+            scales: { r: { min: 0, max: 9, ticks: { stepSize: 3 } } }
         }
     });
 
-    let html = "<h3>Plano de Desenvolvimento</h3>";
-    relevantSkills.forEach(s => {
+    let html = "<h3>Sugestões de Desenvolvimento</h3>";
+    relevant.forEach(s => {
         const ev = (evaluations[person] && evaluations[person][s.name]?.current) || 0;
         const target = getEffectiveTarget(person, s.name);
         if (ev < target) {
             const plan = skillPlans[s.name] || {};
             let action = target <= 3 ? plan.n3 : (target <= 6 ? plan.n6 : plan.n9);
-            html += `<div class="pdi-item"><strong>${s.name}</strong> <span class="gap-badge">Alvo: ${target}</span><p>${action || "Sem regra definida."}</p></div>`;
+            html += `<div class="pdi-item"><strong>${s.name}</strong> <span class="gap-badge">Alvo: ${target}</span><p>${action || "Defina regras para esta competência."}</p></div>`;
         }
     });
     container.innerHTML = html;
-}
-
-// AUXILIARES
-function validateScore(val) {
-    const allowed = [0, 3, 6, 9];
-    let num = parseInt(val) || 0;
-    return allowed.includes(num) ? num : 0;
 }
 
 function getDescriptionForLevel(skillName, level) {
@@ -333,18 +322,16 @@ function renderIndividualEvalTable() {
     const body = document.getElementById('individualEvalBody');
     if (!person) { body.innerHTML = ""; return; }
 
-    const personTeams = groups.filter(g => g.members && g.members.includes(person)).map(g => g.name);
-    const relevantSkills = skills.filter(s => !s.team || personTeams.includes(s.team));
+    const relevant = getRelevantSkillsForPerson(person);
 
-    body.innerHTML = relevantSkills.map(s => {
+    body.innerHTML = relevant.map(s => {
         const ev = (evaluations[person] && evaluations[person][s.name]) || { current: 0, target: 0 };
-        const rowId = `row_${person.replace(/\s/g, '')}_${s.name.replace(/\s/g, '')}`;
         return `<tr>
-            <td>${s.name} ${s.team ? `<br><small>(${s.team})</small>` : ''}</td>
+            <td>${s.name}</td>
             <td><input type="number" min="0" max="9" step="3" value="${ev.current}" oninput="updateEvalRealTime('${person}','${s.name}','current',this.value)"></td>
-            <td id="desc_curr_${rowId}" class="desc-cell">${getDescriptionForLevel(s.name, ev.current)}</td>
+            <td class="desc-cell">${getDescriptionForLevel(s.name, ev.current)}</td>
             <td><input type="number" min="0" max="9" step="3" value="${ev.target}" oninput="updateEvalRealTime('${person}','${s.name}','target',this.value)"></td>
-            <td id="desc_targ_${rowId}" class="desc-cell">${getDescriptionForLevel(s.name, ev.target)}</td>
+            <td class="desc-cell">${getDescriptionForLevel(s.name, ev.target)}</td>
         </tr>`;
     }).join('');
 }
@@ -356,22 +343,20 @@ function renderGroupEvalTable() {
     if (!groupName) { container.style.display = "none"; return; }
     container.style.display = "block";
 
-    // Filtra competências que são Globais ou específicas deste Time
-    const relevantSkills = skills.filter(s => !s.team || s.team === groupName);
+    const relevant = skills.filter(s => !s.teams || s.teams.length === 0 || s.teams.includes(groupName));
 
-    body.innerHTML = relevantSkills.map(s => {
+    body.innerHTML = relevant.map(s => {
         const target = (groupTargets[groupName] && groupTargets[groupName][s.name]) || 0;
-        const rowId = `group_${groupName.replace(/\s/g, '')}_${s.name.replace(/\s/g, '')}`;
         return `<tr>
             <td>${s.name}</td>
             <td><input type="number" step="3" min="0" max="9" value="${target}" oninput="updateGroupTarget('${groupName}','${s.name}',this.value)"></td>
-            <td id="desc_group_${rowId}" class="desc-cell">${getDescriptionForLevel(s.name, target)}</td>
+            <td class="desc-cell">${getDescriptionForLevel(s.name, target)}</td>
         </tr>`;
     }).join('');
 }
 
 function updateGroupTarget(group, skill, value) {
-    let val = validateScore(value);
+    let val = parseInt(value) || 0;
     if (!groupTargets[group]) groupTargets[group] = {};
     groupTargets[group][skill] = val;
     sync('groupTargets', groupTargets);
@@ -391,7 +376,7 @@ function removeTag(name) { selectedMembers = selectedMembers.filter(m => m !== n
 
 function saveGroup() {
     const name = document.getElementById('groupName').value.trim();
-    if(!name || selectedMembers.length === 0) return alert("Preencha o nome e adicione membros.");
+    if(!name || selectedMembers.length === 0) return alert("Preencha nome e membros.");
     if (editingInfo.type === 'groups') {
         groups[editingInfo.index] = { name, members: [...selectedMembers] };
         editingInfo = { type: null, index: null };
@@ -410,7 +395,7 @@ function renderSkills() {
     <tr>
         <td>${s.name}</td>
         <td>${s.type}</td>
-        <td>${s.team || 'Global'}</td>
+        <td>${s.teams && s.teams.length > 0 ? s.teams.join(', ') : 'Global'}</td>
         <td class="actions">
             <button onclick="editItem('skills',${i})" class="btn-edit"><i class="fas fa-edit"></i></button>
             <button onclick="deleteItem('skills',${i})" class="btn-delete"><i class="fas fa-trash"></i></button>
@@ -424,9 +409,7 @@ function updateAllSelects() {
     const pOpt = '<option value="">Selecione...</option>' + people.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
     const sOpt = '<option value="">Selecione...</option>' + skills.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
     const gOpt = '<option value="">Selecione...</option>' + groups.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
-    
-    // Novo: select de times no cadastro de competência
-    const teamOpt = '<option value="">Competência Global (Todos)</option>' + groups.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
+    const teamOpt = groups.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
     
     document.getElementById('personSelectField').innerHTML = pOpt;
     document.getElementById('skillPlanSelect').innerHTML = sOpt;
@@ -442,10 +425,9 @@ function renderActionPlanTable() {
     const body = document.getElementById('actionPlanTableBody');
     if (!person) { body.innerHTML = ""; return; }
 
-    const personTeams = groups.filter(g => g.members && g.members.includes(person)).map(g => g.name);
-    const relevantSkills = skills.filter(s => !s.team || personTeams.includes(s.team));
+    const relevant = getRelevantSkillsForPerson(person);
 
-    body.innerHTML = relevantSkills.filter(s => {
+    body.innerHTML = relevant.filter(s => {
         const key = `${person}_${s.name}`;
         return customActionPlans[key] && customActionPlans[key].hasPlan === 'Sim';
     }).map(s => {

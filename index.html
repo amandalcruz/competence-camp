@@ -88,14 +88,13 @@
                         <option value="Hard Skill">Hard Skill</option>
                         <option value="Soft Skill">Soft Skill</option>
                     </select>
-                    <select id="skillTeamSelect">
-                        <option value="">Competência Global (Todos)</option>
-                    </select>
+                    <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; display: block;">Vincular a Times (Ctrl p/ múltiplos):</label>
+                    <select id="skillTeamSelect" multiple style="height: 100px; margin-bottom: 10px;"></select>
                     <button class="btn-primary" onclick="addSkill()">Salvar</button>
                 </div>
                 <div class="card">
                     <table>
-                        <thead><tr><th>Nome</th><th>Tipo</th><th>Time</th><th>Ação</th></tr></thead>
+                        <thead><tr><th>Nome</th><th>Tipo</th><th>Times Vinculados</th><th>Ação</th></tr></thead>
                         <tbody id="skillsList"></tbody>
                     </table>
                 </div>
@@ -116,13 +115,7 @@
                 <div class="card">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Competência</th>
-                                <th>N3</th>
-                                <th>N6</th>
-                                <th>N9</th>
-                                <th>Ações</th> 
-                            </tr>
+                            <tr><th>Competência</th><th>N3</th><th>N6</th><th>N9</th><th>Ações</th></tr>
                         </thead>
                         <tbody id="skillPlansTableBody"></tbody>
                     </table>
@@ -148,7 +141,7 @@
                         <tbody id="individualEvalBody"></tbody>
                     </table>
                 </div>
-                <button class="btn-primary" onclick="saveIndividualEvaluations()" style="margin-top:20px;">Salvar Avaliação</button>
+                <button class="btn-primary" onclick="alert('Avaliações salvas no banco!')" style="margin-top:20px;">Finalizar</button>
             </div>
         </div>
         <div id="aval-grupo" class="sub-content">
@@ -160,7 +153,6 @@
                         <thead><tr><th>Competência</th><th>Target Sugerido (3,6,9)</th><th>Descrição do Target</th></tr></thead>
                         <tbody id="groupEvalBody"></tbody>
                     </table>
-                    <button class="btn-primary" onclick="saveGroupTargets()" style="margin-top:20px;">Salvar</button>
                 </div>
             </div>
         </div>
@@ -189,7 +181,7 @@
     <div id="matriz" class="main-content">
         <div class="card">
             <h2>Matriz de Prontidão</h2>
-            <div class="filter-bar" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+            <div class="filter-bar">
                 <input type="text" id="filterMatrixName" placeholder="Filtrar por nome..." oninput="renderMatrix()">
                 <select id="filterMatrixStatus" onchange="renderMatrix()">
                     <option value="">Todos Status</option>
@@ -210,9 +202,7 @@
 
     <div id="plano_acao" class="main-content">
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2>Plano de Ação Personalizado (GAPs)</h2>
-            </div>
+            <h2>Plano de Ação Personalizado (GAPs)</h2>
             <div class="filter-container">
                 <label>Pessoa:</label>
                 <select id="filterActionPlanPerson" onchange="renderActionPlanTable()"></select>
